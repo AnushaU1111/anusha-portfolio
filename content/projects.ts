@@ -1,0 +1,165 @@
+import { Scene } from "./schema";
+
+/**
+ * Order here is the order on the site. Every figure on a scene reads its
+ * numbers from this file. Items marked TODO are awaiting confirmation and
+ * must be resolved before launch; see README.
+ */
+const raw = [
+  {
+    index: "02",
+    slug: "neuraluna",
+    org: "Neuraluna AI",
+    period: "Summer 2026",
+    headline: ["Thirty-two models,", "one wrong default."],
+    lede: "Model selection was running on intuition.",
+    body: [
+      "Model selection was running on intuition. I built a harness that ran 32 models across 8 production agents and scored every one on quality, cost and latency.",
+      "Plotted per agent, most of the argument disappeared. A model is only worth defending if it sits on the frontier, the set nothing else beats on every axis at once. Everything underneath is dominated, and one of the dominated ones was in production.",
+    ],
+    pull: "Swapping it for the frontier model above cut cost by about a third and improved quality and latency at the same time. Not a tradeoff. A model nobody had measured.",
+    metrics: [
+      { value: "32", label: "models" },
+      { value: "8", label: "agents" },
+      { value: "−33%", label: "cost", accent: true },
+      { value: "6", label: "fixes shipped" },
+    ],
+    stack: ["Python", "Pandas", "A/B testing", "Pareto analysis"],
+    pinned: true,
+    entryGrid: "pareto",
+    illustrative: ["Chart shows one representative agent of eight. Model names withheld."],
+    sources: [{ kind: "resume", note: "32 models, 8 agents, ~33% cost reduction, 6 A/B-validated fixes" }],
+  },
+  {
+    index: "03",
+    slug: "temple-rag",
+    org: "Temple University",
+    period: "Spring 2025",
+    headline: ["A patient who cannot read", "still needs the answer."],
+    lede: "A retrieval system for colorectal cancer screening, built so that language and literacy are not conditions of getting an answer.",
+    body: [
+      "A RAG chatbot grounded in more than a thousand curated medical documents: USPSTF and ACG clinical guidelines, textbook chapters and structured Q and A from colonoscopy literature. Ingestion, embedding, retrieval and serving, deployed as a working application.",
+    ],
+    pull: "A question can arrive typed, spoken, photographed or uploaded, in any language, and the answer comes back written and read aloud. Every one of those paths exists because a barrier to reading should not be a barrier to screening information.",
+    metrics: [
+      { value: "1,000+", label: "documents", accent: true },
+      { value: "3", label: "faiss indexes" },
+      { value: "5", label: "llm configs" },
+      { value: "4", label: "input modes" },
+    ],
+    stack: ["Python", "Streamlit", "LangChain", "FAISS", "Ollama", "Granite 3.3", "LLaVA", "Whisper", "Tesseract", "gTTS"],
+    credit: "Advised by Dr Vikas Khurana, gastroenterologist, and Prof. Subodha Kumar, Temple University",
+    pinned: false,
+    entryGrid: "pipeline",
+    illustrative: ["Retrieval weights and alpha shown at their defaults.", "Per-configuration evaluation scores are not published."],
+    sources: [{ kind: "notes", note: "Project description supplied by the author, September 2026" }],
+  },
+  {
+    index: "04",
+    slug: "reqtrace",
+    org: "NC State, CSC 510",
+    period: "Fall 2025",
+    headline: ["Every node points back", "to something someone said."],
+    lede: "ReqTrace turns a requirements meeting into a graph you can walk.",
+    body: [
+      "Audio goes in, Whisper transcribes it, spaCy pulls the entities out, and what comes back is a Neo4j graph of requirements, features, tests and stakeholders joined by depends, validates and owns.",
+    ],
+    pull: "The part worth building was provenance. Every node keeps a pointer to the sentence that produced it, so you can select a requirement and read the moment it was agreed to instead of trusting a document written afterwards.",
+    metrics: [
+      { value: "4", label: "node types" },
+      { value: "3", label: "edge types" },
+      { value: "91%", label: "coverage" },
+      { value: "Top 3", label: "in class", accent: true },
+    ],
+    stack: ["FastAPI", "Whisper", "spaCy", "FAISS", "Neo4j", "React Flow"],
+    credit: "Team of five · MIT licensed · archived with a DOI",
+    pinned: false,
+    entryGrid: "graph",
+    illustrative: ["Graph instance, transcript quote and timestamps are illustrative."],
+    sources: [
+      { kind: "repository", note: "tiva710/SE_Project_2 README: node and edge types, 91% Codecov, DOI 10.5281/zenodo.17544380", url: "https://github.com/tiva710/SE_Project_2" },
+    ],
+  },
+  {
+    index: "05",
+    slug: "affordability",
+    org: "NC State",
+    period: "2026",
+    headline: ["1.1 million posts, three model heads,", "one pass."],
+    lede: "Nobody had read this corpus and nobody was going to. My job was to build the thing that made it analysable.",
+    body: [
+      "A full preprocessing pipeline over 1.1 million social media posts, then three transformer heads in a single pass: a RoBERTa sentiment classifier, a DistilRoBERTa emotion classifier, and BERTopic for unsupervised topic recovery.",
+    ],
+    pull: "The hard part was never the models. It was making 1.1 million rows survive cleaning, deduplication and language filtering without quietly dropping the population the study was about.",
+    metrics: [
+      { value: "1.1M", label: "ingested" },
+      { value: "TODO", label: "after filtering" },
+      { value: "3", label: "model heads", accent: true },
+      { value: "TODO", label: "topics" },
+    ],
+    stack: ["Python", "Pandas", "RoBERTa", "DistilRoBERTa", "BERTopic", "HDBSCAN"],
+    credit: "Topic labels and findings withheld pending publication",
+    pinned: true,
+    entryGrid: "corpus",
+    illustrative: ["Distributions and cluster map are illustrative. Topic labels withheld."],
+    sources: [{ kind: "notes", note: "1.1M+ posts, cardiffnlp/twitter-roberta, j-hartmann emotion, BERTopic" }],
+  },
+  {
+    index: "06",
+    slug: "acoustic",
+    org: "NC State",
+    period: "Spring 2026",
+    headline: ["Trained on ten people. Tested on three it had", "never heard."],
+    lede: "Four-class acoustic event classification from chest-microphone recordings. Subject-independent, which is the part of wearable audio that actually breaks.",
+    body: [
+      "A five-fold log-mel CNN ensembled with LightGBM over PANNs CNN14 embeddings, Viterbi decoding with per-class offset tuning, trained on ten subjects and tested on three the model had never heard.",
+    ],
+    pull: "0.93 accuracy and 0.78 macro F1 on held-out subjects, with speech at 0.93 F1 and background at 0.96. Non-verbal is under four percent of frames and is the class that needs more data before its numbers mean much.",
+    metrics: [
+      { value: "672K", label: "frames" },
+      { value: "0.78", label: "macro f1" },
+      { value: "0.93", label: "accuracy", accent: true },
+      { value: "Top 5", label: "in class" },
+    ],
+    stack: ["PyTorch", "PANNs CNN14", "LightGBM", "log-mel", "Viterbi", "5-fold"],
+    pinned: false,
+    entryGrid: "spectrogram",
+    illustrative: ["Spectrogram and frame timeline are illustrative windows."],
+    sources: [
+      { kind: "report", note: "Classification report: speech 0.90/0.96/0.93, cough 0.76/0.82/0.79, non-verbal 0.65/0.35/0.46, other 0.96/0.96/0.96, n=672,203" },
+      { kind: "notes", note: "TODO confirm 10 train / 3 held-out subjects" },
+    ],
+  },
+  {
+    index: "07",
+    slug: "skin-cancer",
+    org: "NC State, CSC 542",
+    period: "Spring 2026",
+    headline: ["Missing a cancer costs more than a", "false alarm."],
+    lede: "Binary screening over 10,015 dermatoscopic images. Where we set the threshold was a clinical decision, not an optimisation.",
+    body: [
+      "Four models over HAM10000: EfficientNet-B3, B5, a multiclass-pretrained B5 and an EVA02 vision transformer, combined by five-pass test-time augmentation and weighted by validation AUC. Focal loss, MixUp and CutMix, and a weighted sampler to handle the 4:1 imbalance.",
+    ],
+    pull: "We set the operating threshold at 0.40 rather than the 0.50 that maximises F1. That trade costs precision and buys recall, and it caught 275 of 293 malignant cases in the held-out test set.",
+    metrics: [
+      { value: "0.964", label: "roc-auc", accent: true },
+      { value: "93.9%", label: "recall" },
+      { value: "18", label: "missed of 293" },
+      { value: "10,015", label: "images" },
+    ],
+    stack: ["PyTorch", "EfficientNet", "EVA02 ViT", "Focal loss", "MixUp / CutMix", "TTA"],
+    credit: "Team of three · NC State AI Student Symposium 2026",
+    pinned: false,
+    entryGrid: "contact-sheet",
+    illustrative: [],
+    sources: [
+      { kind: "report", note: "Ensemble (weighted TTA): accuracy 0.8649, precision 0.5978, recall 0.9386, F1 0.7304, ROC-AUC 0.9640; confusion 1025/185/18/275" },
+      { kind: "poster", note: "AI Student Symposium 2026 poster: AUC progression 0.756 to 0.964, threshold 0.40, 18 missed of 293" },
+    ],
+  },
+] as const;
+
+export const projects: Scene[] = raw.map((p) => Scene.parse(p));
+
+export const projectBySlug = (slug: string): Scene | undefined =>
+  projects.find((p) => p.slug === slug);

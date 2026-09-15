@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+.env*
+!.env.example
+playwright-report
+test-results
+*.tsbuildinfo
+.DS_Store
+# generated at build time from assets/
+public/grids/*.json
