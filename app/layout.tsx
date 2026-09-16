@@ -18,10 +18,17 @@ const jetbrains = JetBrains_Mono({
   display: "swap",
 });
 
+/**
+ * Where the site is actually served from, which only the deploy knows: the
+ * Pages workflow passes it in. Unset in development, where there is no
+ * canonical origin to resolve social-card URLs against.
+ */
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
 export const metadata: Metadata = {
   title: profile.name,
   description: profile.role,
-  // TODO set metadataBase to the production domain before launch
+  ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
   openGraph: { title: profile.name, description: profile.role, type: "website" },
   twitter: { card: "summary_large_image", title: profile.name, description: profile.role },
 };

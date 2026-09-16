@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "npm run grids && next build",
+    "build": "next build",
     "start": "next start",
     "grids": "tsx scripts/build-grids.ts",
     "typecheck": "tsc --noEmit",

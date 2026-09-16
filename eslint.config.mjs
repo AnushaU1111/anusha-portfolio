@@ -4,7 +4,10 @@ import next from "@next/eslint-plugin-next";
 import reactHooks from "eslint-plugin-react-hooks";
 
 export default tseslint.config(
-  { ignores: [".next/**", "node_modules/**", "public/grids/**", "playwright-report/**", "next-env.d.ts", "*.config.mjs"] },
+  // `out/**` is the static export: the same built bundles as `.next/**`, and
+  // linting a minified chunk against the type-aware config only produces
+  // parse errors for files no tsconfig covers.
+  { ignores: [".next/**", "out/**", "node_modules/**", "public/grids/**", "playwright-report/**", "test-results/**", "next-env.d.ts", "*.config.mjs"] },
   js.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   {

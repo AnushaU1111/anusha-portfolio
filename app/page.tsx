@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { projects } from "@/content/projects";
+import { asset } from "@/lib/basePath";
 import { about, contact } from "@/content/about";
 import { profile } from "@/content/profile";
 import { links } from "@/content/links";
@@ -73,8 +75,8 @@ export default function Home() {
       {/* The cold open, the portrait and the chart share one fine-grid canvas,
           because each becoming the next has to be the same characters moving. */}
       <MorphField
-        flowerSrc="/lily.png"
-        faceSrc="/portrait-face.jpg"
+        flowerSrc={asset("/lily.png")}
+        faceSrc={asset("/portrait-face.jpg")}
         targetId="portrait-box"
         {...chart}
         {...pipe}
@@ -214,7 +216,9 @@ export default function Home() {
         </dl>
         <footer className="absolute inset-x-12 bottom-6 flex justify-between border-t border-line pt-3.5 font-mono text-[8.5px] uppercase tracking-[0.2em] text-[#3b3335]">
           <span>&copy; 2026 {profile.name}</span>
-          <a href="/colophon" className="text-[#4a4042] hover:text-mute">Set in Cormorant and JetBrains Mono &middot; every figure drawn in characters</a>
+          {/* A Link rather than a raw anchor, so the router adds both the
+              subpath the site is served from and the trailing slash. */}
+          <Link href="/colophon" className="text-[#4a4042] hover:text-mute">Set in Cormorant and JetBrains Mono &middot; every figure drawn in characters</Link>
           <span>Built in TypeScript</span>
         </footer>
       </section>
