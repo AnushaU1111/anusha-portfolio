@@ -37,19 +37,39 @@ export const frontierOf = (points: ParetoPoint[]): boolean[] =>
     ),
   );
 
-/**
- * Scene 02, on entry. Quality against cost for one representative agent. The
- * scene declares the two models it is about; the rest of the cloud is drawn
- * deterministically, because the real scores are not published.
- */
-export const paretoFigure = (spec: ParetoSpec, ctx: FigureContext): Grid => {
-  const cols = span(ctx.cols, 0.66, 40, 240);
-  const rows = span(ctx.rows, 0.62, 18, 80);
-  const canvas = createCanvas(cols, rows);
-  const rnd = mulberry32(32 * 8);
+/** The scale both renderings of this chart share. */
+export interface ParetoScale {
+  lo: number;
+  hi: number;
+  logLo: number;
+  logSpan: number;
+  qLo: number;
+  qHi: number;
+  /** Cost to a fraction of the axis. */
+  uOf: (cost: number) => number;
+  /** The saturating ceiling the frontier sits on. */
+  ceiling: (u: number) => number;
+}
 
-  const axisRow = rows - 1;
-  const plotRows = Math.max(4, axisRow - 2);
+export interface ParetoCloud {
+  points: ParetoPoint[];
+  kinds: MarkerKind[];
+  scale: ParetoScale;
+  /** Index into points of the two models the scene is actually about. */
+  recommended: number;
+  production: number;
+}
+
+/**
+ * The cloud, generated once so the coarse figure, the fine chart and the
+ * tooltips cannot disagree about a single number.
+ *
+ * The ceiling is fitted through the recommended model, which is what puts it
+ * on the frontier rather than merely drawing it there: nothing cheaper can sit
+ * above a curve that is monotone in cost.
+ */
+export const paretoCloud = (spec: ParetoSpec): ParetoCloud => {
+  const rnd = mulberry32(32 * 8);
   const lo = Math.min(...spec.costAxis) * 0.72;
   const hi = Math.max(...spec.costAxis) * 1.14;
   const logLo = Math.log(lo);
@@ -58,24 +78,14 @@ export const paretoFigure = (spec: ParetoSpec, ctx: FigureContext): Grid => {
   const Q_HI = 1.0;
   const Q_FLOOR = 0.3;
   const Q_CEIL = 0.96;
-
-  const colOf = (cost: number) => Math.round(((Math.log(cost) - logLo) / logSpan) * (cols - 6)) + 3;
-  const rowOf = (quality: number) =>
-    Math.round((1 - (Math.min(Q_HI, Math.max(Q_LO, quality)) - Q_LO) / (Q_HI - Q_LO)) * (plotRows - 1));
   const uOf = (cost: number) => (Math.log(cost) - logLo) / logSpan;
 
-  // The ceiling is a saturating curve fitted so that it passes through the
-  // recommended model. That is what makes the recommendation sit on the
-  // frontier rather than merely be drawn there: nothing cheaper can be
-  // placed above a curve that is monotone in cost.
   const uRec = uOf(spec.recommended.cost);
   const share = (spec.recommended.quality - Q_FLOOR) / (Q_CEIL - Q_FLOOR);
   const exponent =
     uRec > 0.02 && uRec < 0.98 && share > 0.02 && share < 0.98 ? Math.log(share) / Math.log(uRec) : 0.45;
   const ceiling = (u: number) => Q_FLOOR + (Q_CEIL - Q_FLOOR) * Math.max(0, u) ** exponent;
 
-  // Roughly a third of the models earn a place on the frontier, spread along
-  // it; the rest fall away underneath by a random margin.
   const onCurve = Math.max(2, Math.round(spec.models * 0.34));
   const points: ParetoPoint[] = [spec.recommended, spec.production];
   for (let i = 0; i < onCurve; i++) {
@@ -89,9 +99,40 @@ export const paretoFigure = (spec: ParetoSpec, ctx: FigureContext): Grid => {
   }
 
   const onFrontier = frontierOf(points);
+  const kinds: MarkerKind[] = points.map((_, i) =>
+    i === 1 ? "production" : onFrontier[i] === true ? "frontier" : "dominated",
+  );
+  return {
+    points,
+    kinds,
+    scale: { lo, hi, logLo, logSpan, qLo: Q_LO, qHi: Q_HI, uOf, ceiling },
+    recommended: 0,
+    production: 1,
+  };
+};
+
+/**
+ * Scene 02, on entry. Quality against cost for one representative agent. The
+ * scene declares the two models it is about; the rest of the cloud is drawn
+ * deterministically, because the real scores are not published.
+ */
+export const paretoFigure = (spec: ParetoSpec, ctx: FigureContext): Grid => {
+  const cols = span(ctx.cols, 0.66, 40, 240);
+  const rows = span(ctx.rows, 0.62, 18, 80);
+  const canvas = createCanvas(cols, rows);
+
+  const axisRow = rows - 1;
+  const plotRows = Math.max(4, axisRow - 2);
+  const { points, kinds, scale } = paretoCloud(spec);
+  const { logLo, logSpan, qLo: Q_LO, qHi: Q_HI, ceiling } = scale;
+
+  const colOf = (cost: number) => Math.round(((Math.log(cost) - logLo) / logSpan) * (cols - 6)) + 3;
+  const rowOf = (quality: number) =>
+    Math.round((1 - (Math.min(Q_HI, Math.max(Q_LO, quality)) - Q_LO) / (Q_HI - Q_LO)) * (plotRows - 1));
+
   const plotted: PlottedModel[] = points.map((p, i) => ({
     ...p,
-    kind: i === 1 ? "production" : onFrontier[i] === true ? "frontier" : "dominated",
+    kind: kinds[i] ?? "dominated",
     col: colOf(p.cost),
     row: rowOf(p.quality),
   }));

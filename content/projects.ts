@@ -69,6 +69,28 @@ const raw = [
       gate: "guardian",
       outputs: ["reply", "audio"],
     },
+    detail: {
+      waysIn: [
+        { key: "text", what: "typed query", how: "any language" },
+        { key: "image", what: "photo of a leaflet or report", how: "tesseract ocr" },
+        { key: "pdf", what: "uploaded document", how: "pdfplumber, pypdf2" },
+        { key: "voice", what: "spoken question, live mic", how: "openai whisper" },
+      ],
+      retrieval: [
+        { label: "clinical guidelines", weight: 0.45, source: "uspstf, acg" },
+        { label: "textbook content", weight: 0.3, source: "colorectal chapters" },
+        { label: "structured q and a", weight: 0.25, source: "colonoscopy literature" },
+      ],
+      hybridAlpha: 0.5,
+      assessed: ["medical accuracy", "hallucination rate", "response coherence"],
+      assessedNote:
+        "A Granite Guardian pass sits between generation and delivery, flagging and suppressing unsafe responses. Per-configuration scores are not published.",
+      keeps: [
+        { label: "chat memory", note: "carried into the prompt so follow-up questions work" },
+        { label: "session history", note: "resumable, and clearable in one click" },
+        { label: "audit log", note: "separate and permanent, kept whatever the user clears" },
+      ],
+    },
     illustrative: ["Retrieval weights and alpha shown at their defaults.", "Per-configuration evaluation scores are not published."],
     sources: [{ kind: "notes", note: "Project description supplied by the author, September 2026" }],
   },
@@ -91,7 +113,9 @@ const raw = [
     ],
     stack: ["FastAPI", "Whisper", "spaCy", "FAISS", "Neo4j", "React Flow"],
     credit: "Team of five · MIT licensed · archived with a DOI",
-    pinned: false,
+    // Holds for part of a viewport so the graph can be explored rather than
+    // scrolled past.
+    pinned: true,
     entryGrid: "graph",
     figure: {
       kind: "graph",
@@ -99,8 +123,59 @@ const raw = [
       edgeTypes: ["owns", "depends", "validates"],
       nodes: 19,
       edges: 24,
+      transcript: [
+        {
+          node: "R-01",
+          quote: "Nothing goes out until the upload itself is signed off. That is the gate.",
+          at: "00:03:40",
+          speaker: "speaker 1",
+          session: "session 04",
+        },
+        {
+          node: "R-02",
+          quote: "They want to see who asked for it, not just what got built.",
+          at: "00:08:05",
+          speaker: "speaker 3",
+          session: "session 04",
+        },
+        {
+          node: "R-03",
+          quote: "If the upload drops halfway we still have to show them the earlier sessions. That one isn't negotiable.",
+          at: "00:14:22",
+          speaker: "speaker 2",
+          session: "session 04",
+        },
+        {
+          node: "R-04",
+          quote: "Every change needs a line back to the meeting it came out of, or we are guessing again.",
+          at: "00:21:17",
+          speaker: "speaker 2",
+          session: "session 04",
+        },
+        {
+          node: "R-05",
+          quote: "The export has to be readable by someone who was not in the room.",
+          at: "00:27:49",
+          speaker: "speaker 4",
+          session: "session 05",
+        },
+        {
+          node: "R-06",
+          quote: "Start from the audio. If we start from notes we have already lost half of it.",
+          at: "00:31:02",
+          speaker: "speaker 1",
+          session: "session 05",
+        },
+        {
+          node: "R-07",
+          quote: "Two people disagreeing is a fact about the requirement. Keep both.",
+          at: "00:38:55",
+          speaker: "speaker 3",
+          session: "session 05",
+        },
+      ],
     },
-    illustrative: ["Graph instance, transcript quote and timestamps are illustrative."],
+    illustrative: ["Graph instance, transcript quotes and timestamps are illustrative."],
     sources: [
       { kind: "repository", note: "tiva710/SE_Project_2 README: node and edge types, 91% Codecov, DOI 10.5281/zenodo.17544380", url: "https://github.com/tiva710/SE_Project_2" },
     ],

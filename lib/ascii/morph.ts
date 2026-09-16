@@ -29,6 +29,27 @@ export interface MorphPairs {
   srcColor: Uint8Array;
   dstColor: Uint8Array;
   srcAlpha: Float32Array;
+  /**
+   * Alpha at the far end. One for a character that arrives; zero for one the
+   * destination has no room for, which is how the portrait comes apart into a
+   * chart far smaller than it.
+   */
+  dstAlpha: Float32Array;
+  /**
+   * One byte per pair. Zero means `dst` is relative to the destination figure's
+   * box, which is the normal case. One means it is relative to the *source's*
+   * box: a character that the destination has no room for drifts away from
+   * where it already is, rather than being flung at a box somewhere else on the
+   * page as it fades.
+   */
+  dstLocal: Uint8Array;
+  /**
+   * What part of the destination figure this character belongs to, or -1 for
+   * none. The dependency graph uses it: selecting a node means holding the
+   * edges it is an end of and letting the rest recede, which is a question
+   * about groups of characters rather than about where they are.
+   */
+  group: Int16Array;
   /** Where a character waits before the flower has assembled, two px per pair. */
   fly: Float32Array;
   /** One per pair in [0, 1): when this character takes its turn. */
@@ -60,12 +81,18 @@ interface Lit {
 /**
  * Collects a grid's inked cells into flat lists, in reading order.
  *
- * `thin` keeps one cell in N on an even diagonal pattern. The flower needs it:
- * at this cell size its glyphs would touch and it would read as a pink shape
- * rather than as characters, which is the whole point of it.
+ * `thin` keeps roughly one cell in N. The flower needs it: at this cell size
+ * its glyphs would touch and it would read as a pink shape rather than as
+ * characters, which is the whole point of it.
+ *
+ * The choice is hashed rather than periodic. Any linear pattern collapses at
+ * some values of N: `(2c + 3r) % 2` is just "every even row", which draws
+ * scan lines, and `% 3` is every third column. A hash of the coordinates
+ * scatters evenly at any N and leaves no direction in the result.
  */
 const litCells = (grid: Grid, cellW: number, cellH: number, palette: boolean, thin = 1): Lit => {
-  const keep = (c: number, r: number) => thin <= 1 || (c * 2 + r * 3) % thin === 0;
+  const keep = (c: number, r: number) =>
+    thin <= 1 || (((c * 73856093) ^ (r * 19349663)) >>> 0) % thin === 0;
   let n = 0;
   for (let r = 0; r < grid.rows; r++) {
     for (let c = 0; c < grid.cols; c++) {
@@ -134,6 +161,9 @@ export const buildPairs = (flower: Grid, face: Grid, opts: BuildPairsOptions): M
   const srcColor = new Uint8Array(count * 3);
   const dstColor = new Uint8Array(count * 3);
   const srcAlpha = new Float32Array(count);
+  const dstAlpha = new Float32Array(count).fill(1);
+  const dstLocal = new Uint8Array(count);
+  const group = new Int16Array(count).fill(-1);
   const fly = new Float32Array(count * 2);
   const phase = new Float32Array(count);
 
@@ -182,7 +212,7 @@ export const buildPairs = (flower: Grid, face: Grid, opts: BuildPairsOptions): M
     phase[i] = Math.min(0.999, rnd());
   }
 
-  return { count, src, dst, srcIdx, dstIdx, srcColor, dstColor, srcAlpha, fly, phase };
+  return { count, src, dst, srcIdx, dstIdx, srcColor, dstColor, srcAlpha, dstAlpha, dstLocal, group, fly, phase };
 };
 
 export interface StampPairsOptions {
@@ -200,6 +230,20 @@ export interface StampPairsOptions {
   cursor?: { x: number; y: number } | null;
   cursorStrength?: number;
   cursorRadius?: number;
+  /**
+   * Holds some groups and lets the rest recede. `keep[group]` of 1 stays at
+   * full; everything else, including characters with no group, is multiplied
+   * by `factor`. This is how selecting a node in the dependency graph keeps
+   * its own edges and quiets the other twenty.
+   */
+  dim?: { keep: Uint8Array; factor: number } | null;
+  /**
+   * Pulls the figure apart sideways and fades it, as something else takes the
+   * screen. `cx` is the line it parts around, in canvas px; a character travels
+   * away from it in proportion to how far out it already sits, so the ends of
+   * the figure leave first and the middle goes last.
+   */
+  part?: { t: number; cx: number; reach: number } | null;
 }
 
 const ease = (u: number): number => u * u * (3 - 2 * u);
@@ -224,6 +268,10 @@ export const stampPairs = (
   const cursor = o.cursor ?? null;
   const strength = (o.cursorStrength ?? 0) * (1 - eMorph);
   const radius = o.cursorRadius ?? 90;
+  const dim = o.dim ?? null;
+  const part = o.part && o.part.t > 0 ? o.part : null;
+  // Cubed, so the parting starts as a drift and ends as a rush.
+  const partE = part ? part.t ** 3 : 0;
   acc.fill(0);
 
   for (let i = 0; i < pairs.count; i++) {
@@ -234,8 +282,11 @@ export const stampPairs = (
 
     const sx = (pairs.src[i * 2] ?? 0) + o.srcOrigin.x;
     const sy = (pairs.src[i * 2 + 1] ?? 0) + o.srcOrigin.y;
-    const dx = (pairs.dst[i * 2] ?? 0) + o.dstOrigin.x;
-    const dy = (pairs.dst[i * 2 + 1] ?? 0) + o.dstOrigin.y;
+    const staysPut = pairs.dstLocal[i] === 1;
+    const dOx = staysPut ? o.srcOrigin.x : o.dstOrigin.x;
+    const dOy = staysPut ? o.srcOrigin.y : o.dstOrigin.y;
+    const dx = (pairs.dst[i * 2] ?? 0) + dOx;
+    const dy = (pairs.dst[i * 2 + 1] ?? 0) + dOy;
     let x = sx + (dx - sx) * m;
     let y = sy + (dy - sy) * m;
 
@@ -247,8 +298,25 @@ export const stampPairs = (
       y += (pairs.fly[i * 2 + 1] ?? 0) * away;
     }
 
+    if (part) {
+      // Each character takes its own moment, so the figure frays rather than
+      // sliding apart in two solid halves.
+      const local = Math.min(1, partE * (0.55 + (pairs.phase[i] ?? 0) * 0.9));
+      const off = x - part.cx;
+      const side = off < 0 ? -1 : 1;
+      const spread = Math.min(1, Math.abs(off) / (part.reach * 0.5));
+      x += side * part.reach * (0.3 + spread * 0.7) * local;
+      y += ((pairs.phase[i] ?? 0) - 0.5) * part.reach * 0.18 * local;
+    }
+
     let idx = Math.round((pairs.srcIdx[i] ?? 1) + ((pairs.dstIdx[i] ?? 1) - (pairs.srcIdx[i] ?? 1)) * m);
-    let alpha = (pairs.srcAlpha[i] ?? 1) + (1 - (pairs.srcAlpha[i] ?? 1)) * m;
+    const a0 = pairs.srcAlpha[i] ?? 1;
+    let alpha = a0 + ((pairs.dstAlpha[i] ?? 1) - a0) * m;
+    if (dim) {
+      const g = pairs.group[i] ?? -1;
+      if (g < 0 || dim.keep[g] !== 1) alpha *= dim.factor;
+    }
+    if (part) alpha *= 1 - partE;
     // A character the flower never carried is invisible until the face needs
     // it, and costs nothing until then.
     if (alpha < 0.004) continue;
@@ -312,4 +380,226 @@ export const stampPairs = (
     out[off + 2] = (acc[off + 2] ?? 0) * inv;
     out[off + 3] = A * 255;
   }
+};
+
+export interface DisperseMark {
+  x: number;
+  y: number;
+  idx: number;
+  /** Position along the palette, so a mark's hue still comes from the theme. */
+  tone: number;
+  /** How present the mark is. Defaults to the palette's alpha for its tone. */
+  alpha?: number;
+  /** Which part of the figure this mark belongs to, for selective dimming. */
+  group?: number;
+}
+
+export interface DisperseOptions {
+  cellW: number;
+  cellH: number;
+  /** How far a character with nowhere to go drifts as it fades, in px. */
+  scatter?: number;
+  seed?: number;
+}
+
+/**
+ * The portrait coming apart into the chart.
+ *
+ * The chart needs a few thousand characters and the portrait has more than a
+ * hundred thousand, so most of them have nowhere to land. Those drift and fade
+ * instead of being crammed in, which is what makes it read as the picture
+ * disintegrating rather than as one figure squeezing into another.
+ *
+ * Marks are taken in reading order against the portrait's reading order, so
+ * the top of the picture supplies the top of the plot.
+ */
+export const buildDisperse = (face: Grid, marks: DisperseMark[], opts: DisperseOptions): MorphPairs => {
+  const { cellW, cellH } = opts;
+  const scatter = opts.scatter ?? 140;
+  const rnd = mulberry32(opts.seed ?? 2026);
+  const from = litCells(face, cellW, cellH, false);
+  const count = from.count;
+  const [lr, lg, lb] = theme.low;
+  const [hr, hg, hb] = theme.high;
+
+  const ordered = [...marks].sort((a, b) => (a.y === b.y ? a.x - b.x : a.y - b.y));
+
+  const src = new Float32Array(count * 2);
+  const dst = new Float32Array(count * 2);
+  const srcIdx = new Uint8Array(count);
+  const dstIdx = new Uint8Array(count);
+  const srcColor = new Uint8Array(count * 3);
+  const dstColor = new Uint8Array(count * 3);
+  const srcAlpha = new Float32Array(count).fill(1);
+  const dstAlpha = new Float32Array(count);
+  const dstLocal = new Uint8Array(count);
+  const group = new Int16Array(count).fill(-1);
+  const fly = new Float32Array(count * 2);
+  const phase = new Float32Array(count);
+
+  let lastJ = -1;
+  for (let i = 0; i < count; i++) {
+    const fx = from.x[i] ?? 0;
+    const fy = from.y[i] ?? 0;
+    src[i * 2] = fx;
+    src[i * 2 + 1] = fy;
+    srcIdx[i] = from.idx[i] ?? 1;
+    srcColor[i * 3] = from.color[i * 3] ?? 255;
+    srcColor[i * 3 + 1] = from.color[i * 3 + 1] ?? 255;
+    srcColor[i * 3 + 2] = from.color[i * 3 + 2] ?? 255;
+    srcAlpha[i] = from.alpha[i] ?? 1;
+    phase[i] = Math.min(0.999, rnd());
+
+    const j = ordered.length === 0 ? -1 : Math.min(ordered.length - 1, ((i * ordered.length) / count) | 0);
+    const mark = j !== lastJ ? ordered[j] : undefined;
+    lastJ = j;
+
+    if (mark) {
+      dst[i * 2] = mark.x;
+      dst[i * 2 + 1] = mark.y;
+      dstIdx[i] = mark.idx;
+      dstColor[i * 3] = lr + (hr - lr) * mark.tone;
+      dstColor[i * 3 + 1] = lg + (hg - lg) * mark.tone;
+      dstColor[i * 3 + 2] = lb + (hb - lb) * mark.tone;
+      dstAlpha[i] = mark.alpha ?? theme.minAlpha + (theme.maxAlpha - theme.minAlpha) * mark.tone;
+    } else {
+      // Nowhere to land: drift outward from the middle of the picture and go.
+      // Measured in the portrait's own box, not the chart's, so a character
+      // that is leaving drifts off where it stood instead of being thrown at
+      // the chart first.
+      dstLocal[i] = 1;
+      let dx = fx - from.cx;
+      let dy = fy - from.cy;
+      const len = Math.hypot(dx, dy) || 1;
+      dx /= len;
+      dy /= len;
+      const d = scatter * (0.5 + rnd());
+      dst[i * 2] = fx + dx * d;
+      dst[i * 2 + 1] = fy + dy * d;
+      dstIdx[i] = 1;
+      dstColor[i * 3] = srcColor[i * 3] ?? 0;
+      dstColor[i * 3 + 1] = srcColor[i * 3 + 1] ?? 0;
+      dstColor[i * 3 + 2] = srcColor[i * 3 + 2] ?? 0;
+      dstAlpha[i] = 0;
+    }
+  }
+
+  return { count, src, dst, srcIdx, dstIdx, srcColor, dstColor, srcAlpha, dstAlpha, dstLocal, group, fly, phase };
+};
+
+/** A mark's colour and alpha, from the palette, at a position on it. */
+const paletteAt = (tone: number): { r: number; g: number; b: number; a: number } => {
+  const [lr, lg, lb] = theme.low;
+  const [hr, hg, hb] = theme.high;
+  return {
+    r: lr + (hr - lr) * tone,
+    g: lg + (hg - lg) * tone,
+    b: lb + (hb - lb) * tone,
+    a: theme.minAlpha + (theme.maxAlpha - theme.minAlpha) * tone,
+  };
+};
+
+/**
+ * One figure of marks becoming another.
+ *
+ * `buildDisperse` starts from a photograph, where the characters are a grid.
+ * From the second figure on there is no grid any more: what exists is the set
+ * of marks the last figure was made of. This pairs those to the next set, so
+ * the handover is exact — at progress zero it draws the figure it came from,
+ * character for character.
+ *
+ * The two sets are rarely the same size. Whichever is shorter has its marks
+ * carried by one character each; the surplus on the other side fades in where
+ * it lands, or drifts off from where it stood.
+ */
+export const buildRelay = (from: DisperseMark[], to: DisperseMark[], opts: DisperseOptions): MorphPairs => {
+  const scatter = opts.scatter ?? 140;
+  const rnd = mulberry32(opts.seed ?? 4041);
+  const order = (m: DisperseMark[]) => [...m].sort((a, b) => (a.y === b.y ? a.x - b.x : a.y - b.y));
+  const src0 = order(from);
+  const dst0 = order(to);
+  const F = src0.length;
+  const T = dst0.length;
+  const count = Math.max(F, T);
+
+  let cx = 0;
+  let cy = 0;
+  for (const m of src0) {
+    cx += m.x;
+    cy += m.y;
+  }
+  if (F > 0) {
+    cx /= F;
+    cy /= F;
+  }
+
+  const src = new Float32Array(count * 2);
+  const dst = new Float32Array(count * 2);
+  const srcIdx = new Uint8Array(count);
+  const dstIdx = new Uint8Array(count);
+  const srcColor = new Uint8Array(count * 3);
+  const dstColor = new Uint8Array(count * 3);
+  const srcAlpha = new Float32Array(count);
+  const dstAlpha = new Float32Array(count);
+  const dstLocal = new Uint8Array(count);
+  const group = new Int16Array(count).fill(-1);
+  const fly = new Float32Array(count * 2);
+  const phase = new Float32Array(count);
+
+  let lastF = -1;
+  let lastT = -1;
+  for (let i = 0; i < count; i++) {
+    phase[i] = Math.min(0.999, rnd());
+    const fi = F === 0 ? -1 : Math.min(F - 1, ((i * F) / count) | 0);
+    const ti = T === 0 ? -1 : Math.min(T - 1, ((i * T) / count) | 0);
+    // Position comes from whichever side has a mark at this step; visibility
+    // comes from whether this character is the one carrying it. A character
+    // that is not a carrier sits, unseen, where its neighbour is, which is what
+    // keeps the shorter figure from being drawn several times over.
+    const home = fi >= 0 ? src0[fi] : ti >= 0 ? dst0[ti] : undefined;
+    if (!home) continue;
+    const carriesFrom = fi !== lastF;
+    const carriesTo = ti !== lastT;
+    lastF = fi;
+    lastT = ti;
+    const b = carriesTo && ti >= 0 ? dst0[ti] : undefined;
+
+    const ca = paletteAt(home.tone);
+    src[i * 2] = home.x;
+    src[i * 2 + 1] = home.y;
+    srcIdx[i] = home.idx;
+    srcColor[i * 3] = ca.r;
+    srcColor[i * 3 + 1] = ca.g;
+    srcColor[i * 3 + 2] = ca.b;
+    srcAlpha[i] = carriesFrom && fi >= 0 ? (home.alpha ?? ca.a) : 0;
+
+    if (b) {
+      const cb = paletteAt(b.tone);
+      dst[i * 2] = b.x;
+      dst[i * 2 + 1] = b.y;
+      dstIdx[i] = b.idx;
+      dstColor[i * 3] = cb.r;
+      dstColor[i * 3 + 1] = cb.g;
+      dstColor[i * 3 + 2] = cb.b;
+      dstAlpha[i] = b.alpha ?? cb.a;
+      group[i] = b.group ?? -1;
+    } else {
+      dstLocal[i] = 1;
+      let ox = home.x - cx;
+      let oy = home.y - cy;
+      const len = Math.hypot(ox, oy) || 1;
+      ox /= len;
+      oy /= len;
+      const d = scatter * (0.5 + rnd());
+      dst[i * 2] = home.x + ox * d;
+      dst[i * 2 + 1] = home.y + oy * d;
+      dstIdx[i] = 1;
+      dstColor[i * 3] = ca.r;
+      dstColor[i * 3 + 1] = ca.g;
+      dstColor[i * 3 + 2] = ca.b;
+      dstAlpha[i] = 0;
+    }
+  }
+
+  return { count, src, dst, srcIdx, dstIdx, srcColor, dstColor, srcAlpha, dstAlpha, dstLocal, group, fly, phase };
 };

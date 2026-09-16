@@ -4,6 +4,7 @@ import { profile } from "@/content/profile";
 import { links } from "@/content/links";
 import { Field } from "@/components/Field";
 import { MorphField } from "@/components/MorphField";
+import { TempleSection } from "@/components/TempleSection";
 
 /**
  * Phase 01 scaffold. Sections render their content from the model so the
@@ -11,12 +12,42 @@ import { MorphField } from "@/components/MorphField";
  * pinning and transitions arrive with the AsciiField scenes in phase 04.
  */
 export default function Home() {
+  // The Pareto chart is drawn on the fine canvas out of the portrait's own
+  // characters, so it reads its numbers from the same scene the copy does.
+  const pareto = projects.find((p) => p.figure.kind === "pareto")?.figure;
+  const chart = pareto?.kind === "pareto" ? { chartTargetId: "chart-box", chartSpec: pareto } : {};
+  // The Temple diagram is the chart's own characters again, travelling into the
+  // runs between its nodes, so it reads the same scene the copy beside it does.
+  const temple = projects.find((p) => p.slug === "temple-rag");
+  const pipe =
+    temple?.figure.kind === "pipeline"
+      ? { pipeTargetId: "pipe-box", pipeSpec: temple.figure, pipeExitId: "temple-results" }
+      : {};
+  // And the pipeline's runs become the dependency graph's edges, so the whole
+  // page is one set of characters from the flower onward.
+  const reqtrace = projects.find((p) => p.slug === "reqtrace");
+  const graph =
+    reqtrace?.figure.kind === "graph"
+      ? {
+          graphTargetId: "graph-box",
+          graphSpec: reqtrace.figure,
+          transcript: reqtrace.figure.transcript,
+        }
+      : {};
+
   return (
     <main className="relative">
       <Field />
-      {/* The cold open and the portrait share one fine-grid canvas, because the
-          flower becoming the face has to be the same characters moving. */}
-      <MorphField flowerSrc="/lily.png" faceSrc="/portrait-face.jpg" targetId="portrait-box" />
+      {/* The cold open, the portrait and the chart share one fine-grid canvas,
+          because each becoming the next has to be the same characters moving. */}
+      <MorphField
+        flowerSrc="/lily.png"
+        faceSrc="/portrait-face.jpg"
+        targetId="portrait-box"
+        {...chart}
+        {...pipe}
+        {...graph}
+      />
       <section id="top" className="relative z-10 flex min-h-dvh flex-col justify-end px-12 pb-24">
         <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-rose">{profile.name} &middot; ML engineer</div>
         <h1 className="mt-6 font-serif text-[132px] font-light leading-[0.86] tracking-[-0.01em]">
@@ -30,7 +61,10 @@ export default function Home() {
         </p>
       </section>
 
-      <section id="about" className="relative z-10 grid min-h-dvh grid-cols-[660px_1fr]">
+      {/* Both grids give their columns a zero floor and the copy a minimum, or
+          the fixed first column plus the copy's own min-content width is wider
+          than a narrow laptop window and the page scrolls sideways. */}
+      <section id="about" className="relative z-10 grid min-h-dvh grid-cols-[minmax(0,660px)_minmax(380px,1fr)]">
         {/* Where the flower's characters land. MorphField reads this box every
             frame, so once the face has arrived it scrolls with the section. */}
         <div id="portrait-box" className="min-h-dvh" aria-hidden="true" />
@@ -46,7 +80,7 @@ export default function Home() {
           ))}
           <p className="mt-6 max-w-[600px] border-l border-rose pl-6 text-[18.5px] leading-[1.6] text-[#ded5ce]">{about.pull}</p>
           <p className="mt-3 max-w-[600px] text-[14px] leading-[1.58] text-[#8d817c]">{about.throughLine}</p>
-          <dl className="mt-7 flex gap-16 border-t border-line pt-6">
+          <dl className="mt-7 flex flex-wrap gap-x-16 gap-y-6 border-t border-line pt-6">
             {[["Now", profile.now], ["Recently", profile.recently], ["Focus", profile.focus]].map(([k, v]) => (
               <div key={k}>
                 <dt className="font-mono text-[9.5px] uppercase tracking-[0.28em] text-mute">{k}</dt>
@@ -58,8 +92,13 @@ export default function Home() {
       </section>
 
       <div id="work">
-        {projects.map((p) => (
-          <section key={p.slug} id={p.slug} className="relative z-10 grid min-h-dvh grid-cols-[498px_1fr]">
+        {projects.map((p) =>
+          // The Temple scene is two states rather than one, so it owns its own
+          // layout instead of the shared project shell.
+          p.detail ? (
+            <TempleSection key={p.slug} scene={p} detail={p.detail} />
+          ) : (
+          <section key={p.slug} id={p.slug} className="relative z-10 grid min-h-dvh grid-cols-[minmax(0,498px)_minmax(0,1fr)]">
             {/* The text column is opaque and the figure column is not, so the
                 field shows through on the right and never behind the type. */}
             <div className="relative z-10 bg-bg px-12 pt-28">
@@ -73,7 +112,7 @@ export default function Home() {
                 <p key={t} className="mt-4 text-[16.5px] leading-[1.58] text-[#a2958f]">{t}</p>
               ))}
               <p className="mt-6 border-l border-rose pl-5 text-[16.5px] leading-[1.58] text-[#ded5ce]">{p.pull}</p>
-              <dl className="mt-10 flex gap-9 border-t border-line pt-6">
+              <dl className="mt-10 flex flex-wrap gap-x-9 gap-y-5 border-t border-line pt-6">
                 {p.metrics.map((m) => (
                   <div key={m.label}>
                     <dd className={`font-serif text-[36px] leading-none ${m.accent ? "text-rose" : ""}`}>{m.value}</dd>
@@ -88,9 +127,17 @@ export default function Home() {
               </ul>
               {p.credit && <p className="mt-5 font-mono text-[8.5px] uppercase tracking-[0.2em] text-[#4a4042]">{p.credit}</p>}
             </div>
-            <div data-entry-grid={p.entryGrid} aria-hidden="true" />
+            <div data-entry-grid={p.entryGrid} aria-hidden="true">
+              {/* Where the portrait's characters land. MorphField reads this box
+                  every frame, so the plot sits in the column and the axis over
+                  it follows. Full-bleed: the whole screen beside the copy, edge
+                  to edge, with only enough padding inside for the labels. */}
+              {p.slug === "neuraluna" && <div id="chart-box" className="h-dvh w-full" />}
+              {p.slug === "reqtrace" && <div id="graph-box" className="h-dvh w-full" />}
+            </div>
           </section>
-        ))}
+          ),
+        )}
       </div>
 
       <section id="contact" className="relative z-10 min-h-dvh px-12 pt-32">
@@ -112,7 +159,7 @@ export default function Home() {
             </li>
           ))}
         </ul>
-        <dl className="mt-8 flex max-w-[620px] gap-14">
+        <dl className="mt-8 flex max-w-[620px] flex-wrap gap-x-14 gap-y-5">
           {[["Based in", profile.location], ["Available", profile.available], ["Status", profile.status.join(" · ")]].map(([k, v]) => (
             <div key={k}>
               <dt className="font-mono text-[8.5px] uppercase tracking-[0.22em] text-[#4a4042]">{k}</dt>

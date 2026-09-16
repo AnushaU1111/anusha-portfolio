@@ -70,19 +70,40 @@ const TOP: Record<string, number> = {
   "skin-cancer": 6,
 };
 
-const projectScene = (p: Scene): SceneSpec => ({
-  id: p.slug,
-  sectionId: p.slug,
-  // Generated from the scene's own figure data, so the figure and the numbers
-  // beside it cannot disagree.
-  figure: (ctx) => Promise.resolve(buildFigure(p.figure, ctx)),
-  anchor: "right",
-  top: TOP[p.slug] ?? 10,
-  pinned: p.pinned,
-  // Every project figure enters out of the one before it. The handoff between
-  // two scenes is the previous target coming apart into this one.
-  entry: "previous",
-});
+/**
+ * Scenes whose figure lives on MorphField instead, at a cell a fifth this
+ * size. The shared field draws nothing for them; the scene stays so the
+ * section still pins and the chain of entries is unbroken.
+ */
+const ON_MORPH_FIELD = new Set(["neuraluna", "temple-rag", "reqtrace"]);
+
+/**
+ * How long a pinned section holds, where a full viewport is too long. Neuraluna
+ * is one: its chart has finished arriving by the moment the section pins, so
+ * the default hold is a whole viewport of scrolling in which nothing happens.
+ */
+const HOLD: Record<string, string> = { neuraluna: "+=35%", reqtrace: "+=55%" };
+
+const projectScene = (p: Scene): SceneSpec => {
+  const spec: SceneSpec = {
+    id: p.slug,
+    sectionId: p.slug,
+    // Generated from the scene's own figure data, so the figure and the numbers
+    // beside it cannot disagree.
+    figure: ON_MORPH_FIELD.has(p.slug)
+      ? () => Promise.resolve(emptyGrid(1, 1))
+      : (ctx) => Promise.resolve(buildFigure(p.figure, ctx)),
+    anchor: "right",
+    top: TOP[p.slug] ?? 10,
+    pinned: p.pinned,
+    // Every project figure enters out of the one before it. The handoff between
+    // two scenes is the previous target coming apart into this one.
+    entry: "previous",
+  };
+  const hold = HOLD[p.slug];
+  if (p.pinned && hold !== undefined) spec.trigger = { start: "top top", end: hold };
+  return spec;
+};
 
 export const scenes: SceneSpec[] = [
   // The flower lives on MorphField now, at a cell a fifth this size, so the

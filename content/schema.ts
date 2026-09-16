@@ -54,6 +54,22 @@ export const FigureSpec = z.discriminatedUnion("kind", [
     /** The illustrative instance the entry figure draws. */
     nodes: z.number().int().positive(),
     edges: z.number().int().positive(),
+    /**
+     * What selecting a node shows: the sentence that produced it. Illustrative,
+     * like the instance itself, and the scene says so. A node with no line here
+     * shows its relations and nothing it cannot stand behind.
+     */
+    transcript: z
+      .array(
+        z.object({
+          node: z.string().min(1),
+          quote: z.string().min(1),
+          at: z.string().regex(/^\d{2}:\d{2}:\d{2}$/),
+          speaker: z.string().min(1),
+          session: z.string().min(1),
+        }),
+      )
+      .default([]),
   }),
   z.object({
     kind: z.literal("corpus"),
@@ -82,6 +98,42 @@ export const FigureSpec = z.discriminatedUnion("kind", [
 ]);
 export type FigureSpec = z.infer<typeof FigureSpec>;
 
+/**
+ * The second state of a scene: what the reader gets once the entry figure has
+ * had its say. Only the Temple scene has one so far, which is why it is
+ * optional rather than part of every scene.
+ *
+ * Weights and alpha are the system's defaults, not measured results, and the
+ * scene's `illustrative` list says so on the page.
+ */
+export const SceneDetail = z.object({
+  waysIn: z
+    .array(
+      z.object({
+        key: z.string().min(1),
+        what: z.string().min(1),
+        how: z.string().min(1),
+      }),
+    )
+    .min(1),
+  retrieval: z
+    .array(
+      z.object({
+        label: z.string().min(1),
+        /** Share of the hybrid score, at the default setting. */
+        weight: z.number().min(0).max(1),
+        source: z.string().min(1),
+      }),
+    )
+    .min(1),
+  /** Where the keyword-to-semantic slider sits by default. 0 is all keyword. */
+  hybridAlpha: z.number().min(0).max(1),
+  assessed: z.array(z.string().min(1)).min(1),
+  assessedNote: z.string().min(1),
+  keeps: z.array(z.object({ label: z.string().min(1), note: z.string().min(1) })).min(1),
+});
+export type SceneDetail = z.infer<typeof SceneDetail>;
+
 export const Scene = z.object({
   /** Two-digit scene number as shown in the eyebrow. */
   index: z.string().regex(/^\d{2}$/),
@@ -102,6 +154,8 @@ export const Scene = z.object({
   entryGrid: z.string().min(1),
   /** The data the entry figure is generated from. */
   figure: FigureSpec,
+  /** A second state, shown once the entry figure has resolved and given way. */
+  detail: SceneDetail.optional(),
   /** Figures marked illustrative say so on the figure. */
   illustrative: z.array(z.string()).default([]),
   sources: z.array(Source).min(1),
