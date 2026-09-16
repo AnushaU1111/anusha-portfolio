@@ -1,0 +1,16 @@
+# Never let line-ending or encoding normalisation near a binary file. One pass
+# of text conversion replaces every byte that is not valid UTF-8 with U+FFFD
+# and destroys the file's compressed streams, which for a PDF means a document
+# that still opens and shows nothing. tests/assets.test.ts checks for exactly
+# that damage; this stops git being the thing that causes it.
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.tar.gz binary
