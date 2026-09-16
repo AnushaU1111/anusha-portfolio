@@ -6,6 +6,29 @@ import { span, type FigureContext } from "./context";
 export interface ContactSheetSpec {
   total: number;
   positive: number;
+  stages: { label: string; rocAuc: number }[];
+  scaleLo: number;
+  scaleHi: number;
+  testImages: number;
+  confusion: {
+    benign: { predBenign: number; predMalignant: number };
+    malignant: { predBenign: number; predMalignant: number };
+  };
+  threshold: number;
+  bestF1Threshold: number;
+  f1AtThreshold: number;
+  f1AtBestF1: number;
+  baseline: {
+    label: string;
+    rocAuc: number;
+    recall: number;
+    precision: number;
+    f1: number;
+    accuracy: number;
+  };
+  rocAuc: number;
+  dataset: string;
+  citation: string;
 }
 
 /** Malignant and benign carry different glyphs, so the class is legible without colour. */

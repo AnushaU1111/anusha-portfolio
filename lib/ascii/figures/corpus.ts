@@ -5,6 +5,16 @@ import { span, type FigureContext } from "./context";
 
 export interface CorpusSpec {
   posts: number;
+  /** Rows left once cleaning, deduplication and language filtering are done. */
+  afterFiltering: number;
+  sentimentModel: string;
+  sentiment: { label: string; share: number }[];
+  emotionModel: string;
+  emotion: { label: string; share: number }[];
+  /** Topics recovered, and how many the cluster map draws. */
+  topics: number;
+  topicsShown: number;
+  topicModel: string;
 }
 
 /**

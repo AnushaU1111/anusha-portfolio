@@ -14,7 +14,13 @@ import {
   type Neighbourhood,
   type NodeKind,
 } from "@/lib/ascii/graph";
-import { buildDisperse, buildPairs, buildRelay, stampPairs, type MorphPairs } from "@/lib/ascii/morph";
+import { buildClusters, type Cluster, type ClusterMap } from "@/lib/ascii/cloud";
+import type { CorpusSpec } from "@/lib/ascii/figures/corpus";
+import type { SpectrogramSpec } from "@/lib/ascii/figures/spectrogram";
+import type { ContactSheetSpec } from "@/lib/ascii/figures/contactSheet";
+import { buildBars, type BarChart } from "@/lib/ascii/bars";
+import { buildWave, type Wave } from "@/lib/ascii/wave";
+import { buildDisperse, buildPairs, buildRelay, gridMarks, stampPairs, type MorphPairs } from "@/lib/ascii/morph";
 import { buildPipe, type Pipe, type PipeNode } from "@/lib/ascii/pipe";
 import { photoRows, rgbaToPhotoGrid } from "@/lib/ascii/photo";
 import { CELL_ASPECT } from "@/lib/ascii/ramp";
@@ -64,6 +70,32 @@ interface Props {
   graphSpec?: GraphSpec;
   /** The illustrative sentence behind each node, for the selection card. */
   transcript?: TranscriptLine[];
+  /** Element the topic clusters land in, in the Affordability section. */
+  clusterTargetId?: string;
+  corpusSpec?: CorpusSpec;
+  /**
+   * Element whose arrival brings the clusters in. The section itself, rather
+   * than the map's own box: the box sits low in the column, so cueing off it
+   * would assemble the clusters off the bottom of the screen.
+   */
+  clusterCueId?: string;
+  /** Element the log-mel window fills, in the Acoustic section. */
+  waveTargetId?: string;
+  waveSpec?: SpectrogramSpec;
+  /** Element whose arrival brings the window in. */
+  waveCueId?: string;
+  /** Element the stage bars are drawn in, in the Screening section. */
+  barTargetId?: string;
+  barSpec?: ContactSheetSpec;
+  /** Element whose arrival brings the bars in. */
+  barCueId?: string;
+  /**
+   * Element the lily returns to, on the contact page. The site closes on the
+   * figure it opened with, and it is the same figure: the same grid, sampled
+   * once, collected with the same arguments as the opening pairing.
+   */
+  flowerTargetId?: string;
+  flowerCueId?: string;
 }
 
 export interface TranscriptLine {
@@ -119,14 +151,31 @@ export function MorphField({
   graphTargetId,
   graphSpec,
   transcript,
+  clusterTargetId,
+  corpusSpec,
+  clusterCueId,
+  waveTargetId,
+  waveSpec,
+  waveCueId,
+  barTargetId,
+  barSpec,
+  barCueId,
+  flowerTargetId,
+  flowerCueId,
 }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
   const overlay = useRef<HTMLDivElement>(null);
   const pipeOverlay = useRef<HTMLDivElement>(null);
   const graphOverlay = useRef<HTMLDivElement>(null);
+  const cloudOverlay = useRef<HTMLDivElement>(null);
+  const waveOverlay = useRef<HTMLDivElement>(null);
+  const barOverlay = useRef<HTMLDivElement>(null);
   const [chart, setChart] = useState<ParetoChart | null>(null);
   const [pipe, setPipe] = useState<Pipe | null>(null);
   const [graph, setGraph] = useState<AsciiGraph | null>(null);
+  const [clusters, setClusters] = useState<ClusterMap | null>(null);
+  const [wave, setWave] = useState<Wave | null>(null);
+  const [bars, setBars] = useState<BarChart | null>(null);
   const [hover, setHover] = useState(-1);
   const [picked, setPicked] = useState(-1);
 
@@ -152,8 +201,22 @@ export function MorphField({
       /** The pipeline's runs travelling into the graph's edges. */
       toGraph: MorphPairs | null;
       graph: AsciiGraph | null;
-      /** Kept so a resize can rebuild the chart against the new box. */
+      /** The graph's edges arriving as the corpus's topic clusters. */
+      toClusters: MorphPairs | null;
+      clusters: ClusterMap | null;
+      /** The clusters travelling into the log-mel window. */
+      toWave: MorphPairs | null;
+      wave: Wave | null;
+      /** And the window coming apart into the last figure on the site. */
+      toBars: MorphPairs | null;
+      bars: BarChart | null;
+      /** And the bars becoming the lily again, which is where the site ends. */
+      toFlower: MorphPairs | null;
+      flowerW2: number;
+      flowerH2: number;
+      /** Kept so a resize can rebuild the later stages against the new boxes. */
       face: Grid;
+      flowerGrid: Grid;
       glyphs: GlyphMasks;
       acc: Float32Array;
       buf: ImageData;
@@ -265,6 +328,98 @@ export function MorphField({
       setGraph(g);
     };
 
+    /**
+     * The clusters, and the pairing from the graph's edges into them. This is
+     * the one stage where the destination needs more characters than the source
+     * has: the edges dissolve into the clouds while the rest of each cloud
+     * fades up where it lands.
+     */
+    const buildClusterStage = (b: Built, box: Box) => {
+      if (!corpusSpec || !b.graph) return;
+      const width = Math.round(box.w);
+      const height = Math.round(box.h);
+      if (width < 200 || height < 140) {
+        b.clusters = null;
+        b.toClusters = null;
+        return;
+      }
+      const c = buildClusters(corpusSpec, { width, height, cellW: CELL_W, cellH: CELL_H });
+      b.clusters = c;
+      b.toClusters = buildRelay(plain(b.graph.marks), plain(c.marks), {
+        cellW: CELL_W,
+        cellH: CELL_H,
+        scatter: 200,
+        seed: 71248,
+      });
+      setClusters(c);
+    };
+
+    /**
+     * The log-mel window, and the pairing from the clusters into it. The window
+     * wants more characters than the clouds have, so the clouds travel into it
+     * and the rest of it fills in around them.
+     */
+    const buildWaveStage = (b: Built, box: Box) => {
+      if (!waveSpec || !b.clusters) return;
+      const width = Math.round(box.w);
+      const height = Math.round(box.h);
+      if (width < 200 || height < 140) {
+        b.wave = null;
+        b.toWave = null;
+        return;
+      }
+      const w = buildWave(waveSpec, { width, height, cellW: CELL_W, cellH: CELL_H });
+      b.wave = w;
+      b.toWave = buildRelay(plain(b.clusters.marks), plain(w.marks), {
+        cellW: CELL_W,
+        cellH: CELL_H,
+        scatter: 220,
+        seed: 82359,
+      });
+      setWave(w);
+    };
+
+    /**
+     * The stage bars, and the pairing from the window into them. Six runs need
+     * a fraction of what a spectrogram does, so most of the window drifts off
+     * and what lands is the argument reduced to six numbers.
+     */
+    const buildBarStage = (b: Built, box: Box) => {
+      if (!barSpec || !b.wave) return;
+      const width = Math.round(box.w);
+      const height = Math.round(box.h);
+      if (width < 300 || height < 100) {
+        b.bars = null;
+        b.toBars = null;
+        return;
+      }
+      const c = buildBars(barSpec, { width, height, cellW: CELL_W, cellH: CELL_H });
+      b.bars = c;
+      b.toBars = buildRelay(plain(b.wave.marks), plain(c.marks), {
+        cellW: CELL_W,
+        cellH: CELL_H,
+        scatter: 240,
+        seed: 96471,
+      });
+      setBars(c);
+    };
+
+    /**
+     * The lily again. Built once the bars exist, from the flower grid already
+     * sampled for the opening — so the last figure on the site is the first
+     * one, character for character, and not a second sampling of the same
+     * photograph that might differ.
+     */
+    const buildClosing = (b: Built, flower: Grid) => {
+      if (!b.bars) return;
+      b.toFlower = buildRelay(plain(b.bars.marks), gridMarks(flower, CELL_W, CELL_H, true, 2), {
+        cellW: CELL_W,
+        cellH: CELL_H,
+        scatter: 260,
+        seed: 10_916,
+      });
+    };
+
     const render = () => {
       if (!built || !alive()) return;
       const vh = window.innerHeight || 1;
@@ -290,6 +445,14 @@ export function MorphField({
       const graphBox = built.toGraph ? boxOf(graphTargetId) : null;
       const graphT = graphBox ? (reduced ? (graphBox.y < vh * 0.9 ? 1 : 0) : arrival(graphBox.y, vh)) : 0;
 
+      // The clusters land in a box low in the column, but they are cued by the
+      // section: they have to be arriving while the reader is on this page, not
+      // once they have scrolled down to the map itself.
+      const clusterBox = built.toClusters ? boxOf(clusterTargetId) : null;
+      const cue = clusterCueId ? document.getElementById(clusterCueId) : null;
+      const clusterT =
+        clusterBox && cue ? (reduced ? 1 : arrival(cue.getBoundingClientRect().top, vh)) : 0;
+
       // The pipeline's runs have to cross the Temple results panel to reach the
       // graph, and that panel is opaque. So for the crossing the canvas is
       // lifted above the page's own content and put back down once the graph
@@ -301,7 +464,74 @@ export function MorphField({
         y: (vh - built.flowerH) / 2,
       };
 
-      if (graphT > 0 && built.toGraph && graphBox && pipeBox) {
+      const waveBox = built.toWave ? boxOf(waveTargetId) : null;
+      const waveCue = waveCueId ? document.getElementById(waveCueId) : null;
+      const waveT =
+        waveBox && waveCue ? (reduced ? 1 : arrival(waveCue.getBoundingClientRect().top, vh)) : 0;
+
+      const barBox = built.toBars ? boxOf(barTargetId) : null;
+      const barCue = barCueId ? document.getElementById(barCueId) : null;
+      const barT = barBox && barCue ? (reduced ? 1 : arrival(barCue.getBoundingClientRect().top, vh)) : 0;
+
+      const closeTarget = built.toFlower ? boxOf(flowerTargetId) : null;
+      const closeCue = flowerCueId ? document.getElementById(flowerCueId) : null;
+      const closeT =
+        closeTarget && closeCue ? (reduced ? 1 : arrival(closeCue.getBoundingClientRect().top, vh)) : 0;
+      const closeOrigin = closeTarget
+        ? centred(closeTarget, built.flowerW2, built.flowerH2)
+        : { x: 0, y: 0 };
+
+      if (closeT > 0 && built.toFlower && closeTarget && barBox) {
+        // Back to the lily, centred in its box the way the cold open centres
+        // it in the viewport.
+        stampPairs(built.acc, built.buf.data, canvas.width, canvas.height, built.toFlower, built.glyphs, {
+          cellW: CELL_W,
+          cellH: CELL_H,
+          srcOrigin: { x: barBox.x, y: barBox.y },
+          dstOrigin: closeOrigin,
+          flyT: 1,
+          morphT: closeT,
+          cursor,
+          cursorStrength: reduced ? 0 : cursorStrength * closeT,
+          cursorRadius: 90,
+        });
+      } else if (barT > 0 && built.toBars && barBox && waveBox) {
+        // The window reduced to what each stage bought.
+        stampPairs(built.acc, built.buf.data, canvas.width, canvas.height, built.toBars, built.glyphs, {
+          cellW: CELL_W,
+          cellH: CELL_H,
+          srcOrigin: { x: waveBox.x, y: waveBox.y },
+          dstOrigin: { x: barBox.x, y: barBox.y },
+          flyT: 1,
+          morphT: barT,
+          cursor: null,
+          cursorStrength: 0,
+        });
+      } else if (waveT > 0 && built.toWave && waveBox && clusterBox) {
+        // The clouds travelling into what the model actually hears.
+        stampPairs(built.acc, built.buf.data, canvas.width, canvas.height, built.toWave, built.glyphs, {
+          cellW: CELL_W,
+          cellH: CELL_H,
+          srcOrigin: { x: clusterBox.x, y: clusterBox.y },
+          dstOrigin: { x: waveBox.x, y: waveBox.y },
+          flyT: 1,
+          morphT: waveT,
+          cursor: null,
+          cursorStrength: 0,
+        });
+      } else if (clusterT > 0 && built.toClusters && clusterBox && graphBox) {
+        // The edges arriving as the clouds the corpus turned out to hold.
+        stampPairs(built.acc, built.buf.data, canvas.width, canvas.height, built.toClusters, built.glyphs, {
+          cellW: CELL_W,
+          cellH: CELL_H,
+          srcOrigin: { x: graphBox.x, y: graphBox.y },
+          dstOrigin: { x: clusterBox.x, y: clusterBox.y },
+          flyT: 1,
+          morphT: clusterT,
+          cursor: null,
+          cursorStrength: 0,
+        });
+      } else if (graphT > 0 && built.toGraph && graphBox && pipeBox) {
         // The runs travelling into the graph's edges. Selecting a node holds
         // the edges it is an end of and lets the other twenty recede.
         stampPairs(built.acc, built.buf.data, canvas.width, canvas.height, built.toGraph, built.glyphs, {
@@ -385,9 +615,45 @@ export function MorphField({
         }
       }
 
+      const bel = barOverlay.current;
+      if (bel) {
+        if (barBox && built.bars && barT > 0 && closeT < 0.06) {
+          bel.style.transform = `translate3d(${Math.round(barBox.x)}px, ${Math.round(barBox.y)}px, 0)`;
+          bel.style.width = `${built.bars.width}px`;
+          bel.style.height = `${built.bars.height}px`;
+          bel.style.opacity = clamp01((barT - 0.5) / 0.32).toFixed(3);
+        } else {
+          bel.style.opacity = "0";
+        }
+      }
+
+      const ael = waveOverlay.current;
+      if (ael) {
+        if (waveBox && built.wave && waveT > 0 && barT < 0.06) {
+          ael.style.transform = `translate3d(${Math.round(waveBox.x)}px, ${Math.round(waveBox.y)}px, 0)`;
+          ael.style.width = `${built.wave.width}px`;
+          ael.style.height = `${built.wave.height}px`;
+          ael.style.opacity = clamp01((waveT - 0.5) / 0.32).toFixed(3);
+        } else {
+          ael.style.opacity = "0";
+        }
+      }
+
+      const cel = cloudOverlay.current;
+      if (cel) {
+        if (clusterBox && built.clusters && clusterT > 0.35 && waveT < 0.06) {
+          cel.style.transform = `translate3d(${Math.round(clusterBox.x)}px, ${Math.round(clusterBox.y)}px, 0)`;
+          cel.style.width = `${built.clusters.width}px`;
+          cel.style.height = `${built.clusters.height}px`;
+          cel.style.opacity = clamp01((clusterT - 0.55) / 0.3).toFixed(3);
+        } else {
+          cel.style.opacity = "0";
+        }
+      }
+
       const gel = graphOverlay.current;
       if (gel) {
-        if (graphBox && built.graph && graphT > 0) {
+        if (graphBox && built.graph && graphT > 0 && clusterT < 0.06) {
           gel.style.transform = `translate3d(${Math.round(graphBox.x)}px, ${Math.round(graphBox.y)}px, 0)`;
           gel.style.width = `${built.graph.width}px`;
           gel.style.height = `${built.graph.height}px`;
@@ -411,7 +677,7 @@ export function MorphField({
       }
 
       let nextPick = -1;
-      if (cursor && graphBox && built.graph && graphT >= GRAPH_LIVE) {
+      if (cursor && graphBox && built.graph && graphT >= GRAPH_LIVE && clusterT < 0.06) {
         const hit = nodeAt(built.graph, cursor.x - graphBox.x, cursor.y - graphBox.y);
         nextPick = hit ? hit.index : -1;
       }
@@ -480,7 +746,17 @@ export function MorphField({
         pipe: null,
         toGraph: null,
         graph: null,
+        toClusters: null,
+        clusters: null,
+        toWave: null,
+        wave: null,
+        toBars: null,
+        bars: null,
+        toFlower: null,
+        flowerW2: flower.cols * CELL_W,
+        flowerH2: flower.rows * CELL_H,
         face,
+        flowerGrid: flower,
         glyphs: buildGlyphMasks(CELL_W, CELL_H),
         acc: new Float32Array(canvas.width * canvas.height * 4),
         buf: ctx.createImageData(canvas.width, canvas.height),
@@ -495,6 +771,13 @@ export function MorphField({
       if (pbox) buildPipeline(built, pbox);
       const gbox = boxOf(graphTargetId);
       if (gbox) buildGraphStage(built, gbox);
+      const cbox = boxOf(clusterTargetId);
+      if (cbox) buildClusterStage(built, cbox);
+      const abox = boxOf(waveTargetId);
+      if (abox) buildWaveStage(built, abox);
+      const bbox = boxOf(barTargetId);
+      if (bbox) buildBarStage(built, bbox);
+      buildClosing(built, flower);
       render();
     };
 
@@ -516,7 +799,19 @@ export function MorphField({
         if (box && chartRebuilt) buildChart(built, box);
         const pipeRebuilt = pbox !== null && (chartRebuilt || stale(built.pipe, pbox));
         if (pbox && pipeRebuilt) buildPipeline(built, pbox);
-        if (gbox && (pipeRebuilt || stale(built.graph, gbox))) buildGraphStage(built, gbox);
+        const graphRebuilt = gbox !== null && (pipeRebuilt || stale(built.graph, gbox));
+        if (gbox && graphRebuilt) buildGraphStage(built, gbox);
+        const cbox = boxOf(clusterTargetId);
+        const clusterRebuilt = cbox !== null && (graphRebuilt || stale(built.clusters, cbox));
+        if (cbox && clusterRebuilt) buildClusterStage(built, cbox);
+        const abox = boxOf(waveTargetId);
+        const waveRebuilt = abox !== null && (clusterRebuilt || stale(built.wave, abox));
+        if (abox && waveRebuilt) buildWaveStage(built, abox);
+        const bbox = boxOf(barTargetId);
+        if (bbox && (waveRebuilt || stale(built.bars, bbox))) {
+          buildBarStage(built, bbox);
+          buildClosing(built, built.flowerGrid);
+        }
       }
       schedule();
     };
@@ -554,6 +849,17 @@ export function MorphField({
     pipeExitId,
     graphTargetId,
     graphSpec,
+    clusterTargetId,
+    corpusSpec,
+    clusterCueId,
+    waveTargetId,
+    waveSpec,
+    waveCueId,
+    barTargetId,
+    barSpec,
+    barCueId,
+    flowerTargetId,
+    flowerCueId,
   ]);
 
   return (
@@ -582,6 +888,53 @@ export function MorphField({
         style={{ willChange: "transform, opacity" }}
       >
         {graph && <GraphChrome graph={graph} picked={picked} transcript={transcript ?? []} />}
+      </div>
+      <div
+        ref={cloudOverlay}
+        aria-hidden="true"
+        className="pointer-events-none fixed left-0 top-0 z-0 opacity-0"
+        style={{ willChange: "transform, opacity" }}
+      >
+        {clusters && <ClusterChrome map={clusters} />}
+      </div>
+      <div
+        ref={barOverlay}
+        aria-hidden="true"
+        className="pointer-events-none fixed left-0 top-0 z-0 opacity-0"
+        style={{ willChange: "transform, opacity" }}
+      >
+        {bars && <BarChrome chart={bars} />}
+      </div>
+      <div
+        ref={waveOverlay}
+        aria-hidden="true"
+        className="pointer-events-none fixed left-0 top-0 z-0 opacity-0"
+        style={{ willChange: "transform, opacity" }}
+      >
+        {wave && (
+          <div className="absolute inset-0 font-mono">
+            {/* The mel axis. Brightness is energy in the bin here, which is the
+                one place on this site where it carries the data, so the axis
+                has to say which way the frequency runs. */}
+            <span
+              className="absolute whitespace-nowrap text-[9.5px] uppercase tracking-[0.22em] text-[#6d6265]"
+              style={{
+                left: -8,
+                top: "50%",
+                transform: "rotate(-90deg) translate(-50%, -100%)",
+                transformOrigin: "left top",
+              }}
+            >
+              Mel frequency &uarr;
+            </span>
+            <span className="absolute bottom-[-18px] left-0 whitespace-nowrap text-[9.5px] uppercase tracking-[0.2em] text-[#6d6265]">
+              Time &rarr;
+            </span>
+            <span className="absolute bottom-[-18px] right-0 whitespace-nowrap text-[9.5px] uppercase tracking-[0.2em] text-[#5a4e51]">
+              {wave.cols.toLocaleString()} &times; {wave.rows} bins &middot; brightness is energy
+            </span>
+          </div>
+        )}
       </div>
     </>
   );
@@ -953,6 +1306,64 @@ function GraphCard({
         <Relation label="depends on" ids={near.dependsOn} />
         <Relation label="feeds" ids={near.feeds} />
       </div>
+    </div>
+  );
+}
+
+/**
+ * The cluster map's labels. Only the largest few are named, because the scene
+ * withholds the topic labels: the map's job is to show that the corpus has
+ * structure and roughly how it is distributed, not to publish findings.
+ */
+function ClusterChrome({ map }: { map: ClusterMap }) {
+  return (
+    <div className="absolute inset-0 font-mono">
+      {map.clusters
+        .filter((c) => c.named)
+        .map((c: Cluster) => (
+          <span
+            key={c.id}
+            className="absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[10px] uppercase tracking-[0.18em] text-[#ded5ce]"
+            style={{ left: c.x, top: c.y - c.r - 9 }}
+          >
+            {c.label}
+          </span>
+        ))}
+    </div>
+  );
+}
+
+/**
+ * The bars' names and scores. The runs are characters; a stage name and a
+ * score to three places are not, so they sit over the canvas at the row
+ * positions the chart gives them.
+ */
+function BarChrome({ chart }: { chart: BarChart }) {
+  return (
+    <div className="absolute inset-0 font-mono">
+      {chart.rows.map((r) => (
+        <span key={r.label}>
+          <span
+            className={`absolute -translate-y-1/2 whitespace-nowrap text-right text-[10px] uppercase tracking-[0.16em] ${
+              r.best ? "text-rose" : "text-[#bfb4ae]"
+            }`}
+            style={{ right: chart.width - r.x0 + 14, top: r.y, width: 200 }}
+          >
+            {r.label}
+          </span>
+          <span
+            className={`absolute -translate-y-1/2 whitespace-nowrap text-[11px] tracking-[0.06em] ${
+              r.best ? "text-[#f4ece6]" : "text-[#ded5ce]"
+            }`}
+            style={{ left: chart.valueX + 14, top: r.y }}
+          >
+            {r.value.toFixed(3)}
+          </span>
+        </span>
+      ))}
+      <span className="absolute right-0 top-[-20px] whitespace-nowrap text-[9px] uppercase tracking-[0.18em] text-[#5a4e51]">
+        Scale {chart.lo.toFixed(2)} &rarr; {chart.hi.toFixed(2)}
+      </span>
     </div>
   );
 }

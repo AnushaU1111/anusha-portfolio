@@ -4,6 +4,9 @@ import { profile } from "@/content/profile";
 import { links } from "@/content/links";
 import { Field } from "@/components/Field";
 import { MorphField } from "@/components/MorphField";
+import { AcousticSection } from "@/components/AcousticSection";
+import { ScreeningSection } from "@/components/ScreeningSection";
+import { CorpusSection } from "@/components/CorpusSection";
 import { TempleSection } from "@/components/TempleSection";
 
 /**
@@ -25,6 +28,35 @@ export default function Home() {
       : {};
   // And the pipeline's runs become the dependency graph's edges, so the whole
   // page is one set of characters from the flower onward.
+  // And the edges arrive as the corpus's topic clusters, so the whole page is
+  // one set of characters from the flower onward.
+  const afford = projects.find((p) => p.figure.kind === "corpus");
+  const corpus =
+    afford?.figure.kind === "corpus"
+      ? {
+          clusterTargetId: "cluster-box",
+          corpusSpec: afford.figure,
+          clusterCueId: afford.slug,
+        }
+      : {};
+  // And the clouds travel into the log-mel window the acoustic model sees.
+  const acoustic = projects.find((p) => p.figure.kind === "spectrogram");
+  const waves =
+    acoustic?.figure.kind === "spectrogram"
+      ? { waveTargetId: "wave-box", waveSpec: acoustic.figure, waveCueId: acoustic.slug }
+      : {};
+  // And the window comes apart into the last figure on the site.
+  const screening = projects.find((p) => p.figure.kind === "contactSheet");
+  const barsProps =
+    screening?.figure.kind === "contactSheet"
+      ? {
+          barTargetId: "bar-box",
+          barSpec: screening.figure,
+          barCueId: screening.slug,
+          flowerTargetId: "flower-box",
+          flowerCueId: "contact",
+        }
+      : {};
   const reqtrace = projects.find((p) => p.slug === "reqtrace");
   const graph =
     reqtrace?.figure.kind === "graph"
@@ -47,6 +79,9 @@ export default function Home() {
         {...chart}
         {...pipe}
         {...graph}
+        {...corpus}
+        {...waves}
+        {...barsProps}
       />
       <section id="top" className="relative z-10 flex min-h-dvh flex-col justify-end px-12 pb-24">
         <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-rose">{profile.name} &middot; ML engineer</div>
@@ -97,6 +132,12 @@ export default function Home() {
           // layout instead of the shared project shell.
           p.detail ? (
             <TempleSection key={p.slug} scene={p} detail={p.detail} />
+          ) : p.figure.kind === "corpus" ? (
+            <CorpusSection key={p.slug} scene={p} figure={p.figure} />
+          ) : p.figure.kind === "spectrogram" ? (
+            <AcousticSection key={p.slug} scene={p} figure={p.figure} />
+          ) : p.figure.kind === "contactSheet" ? (
+            <ScreeningSection key={p.slug} scene={p} figure={p.figure} />
           ) : (
           <section key={p.slug} id={p.slug} className="relative z-10 grid min-h-dvh grid-cols-[minmax(0,498px)_minmax(0,1fr)]">
             {/* The text column is opaque and the figure column is not, so the
@@ -141,6 +182,10 @@ export default function Home() {
       </div>
 
       <section id="contact" className="relative z-10 min-h-dvh px-12 pt-32">
+        {/* Where the lily comes back. The bars on the last project page travel
+            into it, so the site closes on the figure it opened with, at the
+            same cell size and from the same grid. */}
+        <div id="flower-box" className="absolute inset-y-0 right-0 w-[58%]" aria-hidden="true" />
         <div className="font-mono text-[10px] uppercase tracking-[0.26em] text-rose">Contact</div>
         <h2 className="mt-6 max-w-[900px] font-serif text-[58px] leading-[1.04]">
           {contact.headline[0]}

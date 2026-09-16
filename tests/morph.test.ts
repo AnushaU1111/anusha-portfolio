@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPairs } from "@/lib/ascii/morph";
+import { buildPairs, gridMarks } from "@/lib/ascii/morph";
 import type { Grid } from "@/lib/ascii/types";
 
 /** A solid block of ink, cols by rows, every cell at the given index. */
@@ -72,5 +72,36 @@ describe("buildPairs", () => {
     const pairs = buildPairs(empty, block(10, 10, 8, 200), opts);
     expect(pairs.count).toBe(100);
     for (let i = 0; i < pairs.count; i++) expect(pairs.srcAlpha[i]).toBe(0);
+  });
+});
+
+describe("gridMarks", () => {
+  it("collects exactly the characters the opening pairing draws the flower from", () => {
+    // The site closes on the lily it opened with. The closing stage's
+    // destination and the opening stage's source are the same collector with
+    // the same arguments, so this asserts they cannot come out different: one
+    // mark per flower character that the opening actually shows.
+    const flower = block(40, 40, 6);
+    const marks = gridMarks(flower, 1.5, 2.5, true, 2);
+    const pairs = buildPairs(flower, block(80, 80, 8, 200), { cellW: 1.5, cellH: 2.5, thin: 2, seed: 1 });
+
+    let carriers = 0;
+    const carried = new Set<string>();
+    for (let i = 0; i < pairs.count; i++) {
+      if ((pairs.srcAlpha[i] ?? 0) <= 0) continue;
+      carriers++;
+      carried.add(`${(pairs.src[i * 2] ?? 0).toFixed(2)},${(pairs.src[i * 2 + 1] ?? 0).toFixed(2)}`);
+    }
+    expect(marks).toHaveLength(carriers);
+    for (const m of marks) expect(carried.has(`${m.x.toFixed(2)},${m.y.toFixed(2)}`)).toBe(true);
+  });
+
+  it("gives every mark a glyph and a presence, so the lily arrives lit", () => {
+    const marks = gridMarks(block(30, 30, 7), 1.5, 2.5, true, 2);
+    expect(marks.length).toBeGreaterThan(0);
+    for (const m of marks) {
+      expect(m.idx).toBeGreaterThan(0);
+      expect(m.alpha ?? 0).toBeGreaterThan(0);
+    }
   });
 });

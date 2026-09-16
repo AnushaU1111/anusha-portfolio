@@ -146,6 +146,38 @@ const litCells = (grid: Grid, cellW: number, cellH: number, palette: boolean, th
   };
 };
 
+/**
+ * A grid's inked cells as marks, for a figure that is a destination rather
+ * than a source.
+ *
+ * The site closes on the lily it opened with, and it has to be the same lily —
+ * not one sampled again with slightly different settings. So the closing stage
+ * reads its destination through this, with the same arguments the opening
+ * pairing passes to the same collector, and the two cannot come out different.
+ */
+export const gridMarks = (
+  grid: Grid,
+  cellW: number,
+  cellH: number,
+  palette: boolean,
+  thin = 1,
+): DisperseMark[] => {
+  const lit = litCells(grid, cellW, cellH, palette, thin);
+  const out: DisperseMark[] = new Array<DisperseMark>(lit.count);
+  for (let i = 0; i < lit.count; i++) {
+    out[i] = {
+      x: lit.x[i] ?? 0,
+      y: lit.y[i] ?? 0,
+      idx: lit.idx[i] ?? 1,
+      // The palette tone is recovered from the ramp index, because that is
+      // what a mark carries; the alpha it was collected with rides along.
+      tone: (lit.idx[i] ?? 1) / 10,
+      alpha: lit.alpha[i] ?? 1,
+    };
+  }
+  return out;
+};
+
 export const buildPairs = (flower: Grid, face: Grid, opts: BuildPairsOptions): MorphPairs => {
   const { cellW, cellH } = opts;
   const reach = opts.reach ?? 0.55;

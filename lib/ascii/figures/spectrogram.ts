@@ -6,11 +6,24 @@ import { span, type FigureContext } from "./context";
 export interface SpectrogramClass {
   name: string;
   support: number;
+  /** The classification report's own numbers for this class. */
+  precision: number;
+  recall: number;
+  f1: number;
+  /** The character this class is drawn with. Class is never carried by colour. */
+  glyph: string;
 }
 
 export interface SpectrogramSpec {
   frames: number;
   classes: SpectrogramClass[];
+  /** The aggregate figures as reported, rather than re-derived from the rows. */
+  accuracy: number;
+  macroF1: number;
+  weightedF1: number;
+  /** Subjects trained on, and subjects held out, which is the scene's point. */
+  trainSubjects: number;
+  heldOutSubjects: number;
 }
 
 /**
@@ -71,13 +84,30 @@ const percentile = (values: number[], p: number): number => {
 };
 
 /**
- * Scene 06, on entry. A log-mel spectrogram: what the model actually sees.
- * Time runs left to right, mel frequency bottom to top, and brightness is
- * energy in that bin and nothing else.
+ * The window itself, as a normalised density per bin, in [0, 1].
+ *
+ * Both renderings of this figure read it: the coarse one puts a glyph in every
+ * cell, and the fine one samples it. The shape of a log-mel window is a
+ * drawing decision and the scene says so, but there is only one of it, so the
+ * two cannot disagree about what the model sees.
+ *
+ * Row 0 is the top of the figure and the top of the mel axis. Time runs left
+ * to right, and the value is energy in that bin and nothing else.
  */
-export const spectrogramFigure = (spec: SpectrogramSpec, ctx: FigureContext): Grid => {
-  const cols = span(ctx.cols, 0.74, 40, 300);
-  const rows = span(ctx.rows, 0.56, 16, 90);
+export const spectrogramField = (
+  spec: SpectrogramSpec,
+  cols: number,
+  rows: number,
+  /**
+   * Where the top of the brightness range is put, as a percentile of the bins.
+   * The default suits a few thousand bins. A window with ten times as many has
+   * ten times as many outliers above any fixed percentile, so the loudest
+   * event sets a ceiling that crushes everything else — the fine rendering
+   * passes a lower one, which is a display choice about the same window and
+   * not a different window.
+   */
+  ceilingAt = 0.993,
+): number[][] => {
   const rnd = mulberry32(672_203);
 
   const energy: number[][] = [];
@@ -137,12 +167,23 @@ export const spectrogramFigure = (spec: SpectrogramSpec, ctx: FigureContext): Gr
   // Normalised over the range above the noise floor rather than from zero, so
   // the quiet part of the window stays quiet instead of hazing over. The floor
   // itself still shows, faintly, which is what a recording looks like.
-  const ceiling = Math.max(percentile(smoothed.flat(), 0.993), FLOOR + 0.1);
+  const ceiling = Math.max(percentile(smoothed.flat(), ceilingAt), FLOOR + 0.1);
+  return smoothed.map((line) =>
+    line.map((v) => Math.min(1, Math.max(0, (v - FLOOR) / (ceiling - FLOOR))) ** 0.78),
+  );
+};
+
+/**
+ * Scene 06, on entry. A log-mel spectrogram: what the model actually sees.
+ */
+export const spectrogramFigure = (spec: SpectrogramSpec, ctx: FigureContext): Grid => {
+  const cols = span(ctx.cols, 0.74, 40, 300);
+  const rows = span(ctx.rows, 0.56, 16, 90);
+  const field = spectrogramField(spec, cols, rows);
   const canvas = createCanvas(cols, rows);
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      const above = ((smoothed[r]?.[c] ?? 0) - FLOOR) / (ceiling - FLOOR);
-      const v = Math.min(1, Math.max(0, above)) ** 0.78;
+      const v = field[r]?.[c] ?? 0;
       if (v <= 0.05) continue;
       canvas.put(c, r, Math.min(10, Math.floor(v * 10)), { tone: v });
     }

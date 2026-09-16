@@ -17,9 +17,10 @@ export interface SceneSpec {
   /** DOM id of the section that drives this scene's scroll progress. */
   sectionId: string;
   /**
-   * Loads the resolved figure at the current viewport size. Photographic
-   * grids come from public/grids and ignore the context; generated ones size
-   * themselves from it, so a resize regenerates rather than scales.
+   * Loads the resolved figure at the current viewport size. Generated figures
+   * size themselves from it, so a resize regenerates rather than scales. A
+   * scene whose figure lives on MorphField returns an empty grid: no scene
+   * loads a pre-built grid any more, so nothing here fetches.
    */
   figure: (ctx: FigureContext) => Promise<Grid>;
   anchor: Anchor;
@@ -49,12 +50,6 @@ export interface SceneSpec {
   trigger?: { start: string; end: string };
 }
 
-const loadGrid = (name: string) => async (): Promise<Grid> => {
-  const res = await fetch(`/grids/${name}.json`);
-  if (!res.ok) throw new Error(`grid ${name} missing; run npm run grids`);
-  return (await res.json()) as Grid;
-};
-
 /**
  * Where each project's entry figure sits, in cells from the top of the
  * viewport. Figures alternate nothing here: every project section puts its
@@ -75,7 +70,14 @@ const TOP: Record<string, number> = {
  * size. The shared field draws nothing for them; the scene stays so the
  * section still pins and the chain of entries is unbroken.
  */
-const ON_MORPH_FIELD = new Set(["neuraluna", "temple-rag", "reqtrace"]);
+const ON_MORPH_FIELD = new Set([
+  "neuraluna",
+  "temple-rag",
+  "reqtrace",
+  "affordability",
+  "acoustic",
+  "skin-cancer",
+]);
 
 /**
  * How long a pinned section holds, where a full viewport is too long. Neuraluna
@@ -128,7 +130,10 @@ export const scenes: SceneSpec[] = [
     trigger: { start: "top bottom", end: "top 15%" },
   },
   ...projects.map(projectScene),
-  { id: "contact", sectionId: "contact", figure: loadGrid("lily"), anchor: "right", top: -8, pinned: false, entry: "previous" },
+  // The lily returns on MorphField, at the cell the cold open drew it at, so
+  // the shared field has nothing to draw here either. Its pre-built coarse
+  // grid is no longer used by any scene.
+  { id: "contact", sectionId: "contact", figure: () => Promise.resolve(emptyGrid(1, 1)), anchor: "right", top: -8, pinned: false, entry: "previous" },
 ];
 
 export interface PreparedScene {

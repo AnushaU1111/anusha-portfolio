@@ -74,6 +74,21 @@ export const FigureSpec = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("corpus"),
     posts: z.number().int().positive(),
+    /** Rows left once cleaning, deduplication and language filtering are done. */
+    afterFiltering: z.number().int().positive(),
+    /**
+     * What each head returned, as a share of the filtered corpus. Shares are
+     * rounded for display and so need not total exactly one; the scene's
+     * `illustrative` list says these are illustrative.
+     */
+    sentimentModel: z.string().min(1),
+    sentiment: z.array(z.object({ label: z.string().min(1), share: z.number().min(0).max(1) })).min(2),
+    emotionModel: z.string().min(1),
+    emotion: z.array(z.object({ label: z.string().min(1), share: z.number().min(0).max(1) })).min(2),
+    /** Topics BERTopic recovered, and how many the cluster map draws. */
+    topics: z.number().int().positive(),
+    topicsShown: z.number().int().positive(),
+    topicModel: z.string().min(1),
   }),
   z.object({
     kind: z.literal("spectrogram"),
@@ -83,17 +98,65 @@ export const FigureSpec = z.discriminatedUnion("kind", [
         z.object({
           name: z.string().min(1),
           support: z.number().int().positive(),
-          precision: z.number(),
-          recall: z.number(),
-          f1: z.number(),
+          precision: z.number().min(0).max(1),
+          recall: z.number().min(0).max(1),
+          f1: z.number().min(0).max(1),
+          /** The character this class is drawn with; class is never a colour. */
+          glyph: z.string().length(1),
         }),
       )
       .min(2),
+    /**
+     * The aggregate figures as the classification report gave them. Not derived
+     * from the per-class rows: those are rounded to two places, so a mean of
+     * them is a different number from the one that was reported. A test checks
+     * the two agree to within that rounding.
+     */
+    accuracy: z.number().min(0).max(1),
+    macroF1: z.number().min(0).max(1),
+    weightedF1: z.number().min(0).max(1),
+    /** Subjects trained on and subjects held out, which is the scene's point. */
+    trainSubjects: z.number().int().positive(),
+    heldOutSubjects: z.number().int().positive(),
   }),
   z.object({
     kind: z.literal("contactSheet"),
     total: z.number().int().positive(),
     positive: z.number().int().positive(),
+    /** Validation ROC-AUC per stage, in the order the stages were built. */
+    stages: z.array(z.object({ label: z.string().min(1), rocAuc: z.number().min(0).max(1) })).min(2),
+    /**
+     * The window the bars are drawn over. Six scores between 0.75 and 0.97
+     * drawn from zero are six identical bars, so the scale is declared and the
+     * figure says what it is.
+     */
+    scaleLo: z.number().min(0).max(1),
+    scaleHi: z.number().min(0).max(1),
+    /** The held-out confusion matrix at the chosen threshold. */
+    testImages: z.number().int().positive(),
+    confusion: z.object({
+      benign: z.object({ predBenign: z.number().int(), predMalignant: z.number().int() }),
+      malignant: z.object({ predBenign: z.number().int(), predMalignant: z.number().int() }),
+    }),
+    /** The threshold chosen, and the one that would have maximised F1. */
+    threshold: z.number().min(0).max(1),
+    bestF1Threshold: z.number().min(0).max(1),
+    /** F1 at each, which is the trade the scene is about. */
+    f1AtThreshold: z.number().min(0).max(1),
+    f1AtBestF1: z.number().min(0).max(1),
+    /** The classical baseline on the same test set, for the comparison. */
+    baseline: z.object({
+      label: z.string().min(1),
+      rocAuc: z.number().min(0).max(1),
+      recall: z.number().min(0).max(1),
+      precision: z.number().min(0).max(1),
+      f1: z.number().min(0).max(1),
+      accuracy: z.number().min(0).max(1),
+    }),
+    rocAuc: z.number().min(0).max(1),
+    /** Where the images came from. */
+    dataset: z.string().min(1),
+    citation: z.string().min(1),
   }),
 ]);
 export type FigureSpec = z.infer<typeof FigureSpec>;
