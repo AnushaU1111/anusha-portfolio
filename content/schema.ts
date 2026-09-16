@@ -230,6 +230,15 @@ export const Link = z.object({
   href: z.string().min(1),
   /** Shown on hover; never printed at rest. */
   reveal: z.string().min(1),
+  /**
+   * The filename a click should save the target as. Set only on a file served
+   * out of public/: without it a browser navigates to the PDF and replaces the
+   * site with its own viewer, which is a dead end on a phone. With it the file
+   * downloads and the page stays where it was.
+   *
+   * Only same-origin URLs honour this, which every public/ file is.
+   */
+  download: z.string().min(1).optional(),
 });
 export type Link = z.infer<typeof Link>;
 

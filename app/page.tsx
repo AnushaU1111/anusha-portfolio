@@ -198,7 +198,9 @@ export default function Home() {
         <ul className="mt-10 max-w-[620px] border-t border-line">
           {links.map((l) => (
             <li key={l.label} className="border-b border-line">
-              <a href={l.href} className="group flex items-baseline gap-4 py-4 no-underline">
+              {/* `download` is undefined on every link but the résumé, and
+                  React omits the attribute entirely when it is. */}
+              <a href={l.href} download={l.download} className="group flex items-baseline gap-4 py-4 no-underline">
                 <span className="font-serif text-[33px] font-light text-[#cfc4be] group-hover:text-[#f4ece6]">{l.label}</span>
                 <span className="flex-1 font-mono text-[9px] tracking-[0.16em] text-transparent group-hover:text-[#8d817c]">{l.reveal}</span>
                 <span className="font-mono text-[13px] text-[#4a4042] group-hover:text-rose">&rarr;</span>

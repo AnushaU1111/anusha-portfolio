@@ -26,4 +26,16 @@ describe("content model", () => {
   it("has a location", () => {
     expect(profile.location).toMatch(/Raleigh/);
   });
+  it("serves the résumé as a download and nothing else", () => {
+    const resume = links.find((l) => l.label === "Résumé");
+    // Ends with the public/ path, but may carry a deploy subpath in front.
+    expect(resume?.href).toMatch(/\/resume\.pdf$/);
+    // Without this the browser opens its own PDF viewer over the site.
+    expect(resume?.download).toBe("Anusha-Upadhyay-Resume.pdf");
+    // Every other link is a destination, not a file: a download attribute on
+    // a mailto: or a cross-origin URL is ignored at best and confusing at
+    // worst, so only the one local file carries it.
+    const others = links.filter((l) => l.label !== "Résumé");
+    expect(others.map((l) => l.download)).toEqual(others.map(() => undefined));
+  });
 });

@@ -10,6 +10,12 @@ export const links: Link[] = [
   { label: "GitHub", href: "https://github.com/AnushaU1111", reveal: "github.com/AnushaU1111" },
   { label: "LinkedIn", href: "https://linkedin.com/in/upadhyay-anusha", reveal: "linkedin.com/in/upadhyay-anusha" },
   // Served straight out of public/, so the router never sees it and it has to
-  // carry the subpath itself.
-  { label: "Résumé", href: asset("/resume.pdf"), reveal: "PDF, 1 page" },
+  // carry the subpath itself. `download` names the saved file: the raw path
+  // would land in someone's downloads folder as the anonymous "resume.pdf".
+  {
+    label: "Résumé",
+    href: asset("/resume.pdf"),
+    reveal: "PDF, 1 page",
+    download: "Anusha-Upadhyay-Resume.pdf",
+  },
 ].map((l) => Link.parse(l));
