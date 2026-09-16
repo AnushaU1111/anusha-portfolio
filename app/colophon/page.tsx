@@ -23,7 +23,7 @@ export default function Colophon() {
           is <em>text.</em>
         </h1>
         <p className="mt-6 max-w-[440px] text-[16.5px] leading-[1.6] text-[#a2958f]">
-          No images were used for the flower, the portrait or any chart. Each one is a grid of characters, drawn from the eleven below, rendered to a canvas.
+          No images were used for the flower, the portrait or any chart. The flower and the portrait are grids of the eleven characters below. The charts and graphs add the few marks they need to say what a point is. All of it renders to one canvas.
         </p>
         <div className="mt-11 border-b border-line pb-2 font-mono text-[8.5px] uppercase tracking-[0.24em] text-[#4a4042]">The ramp &middot; darkest to brightest</div>
         <ol className="mt-4 flex gap-1.5">

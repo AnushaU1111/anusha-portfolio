@@ -17,6 +17,21 @@ export interface Grid {
    * density or emphasis; category is always carried by the glyph itself.
    */
   tone?: number[];
+  /**
+   * Optional per-cell colour, three bytes per cell, unpremultiplied. Present
+   * only on a figure sampled from a photograph, where the glyph carries the
+   * light and the colour carries the hue. Everything else takes its colour
+   * from the palette and leaves this undefined.
+   */
+  color?: Uint8Array;
+  /**
+   * Optional per-cell literal character, overriding the ramp glyph for that
+   * cell. The photographic figures never use this: they are sampled into the
+   * eleven-step ramp. The generated charts and graphs do, because a bracket
+   * or a slash is how they carry category, which brightness is not allowed
+   * to do. A null entry means "use the ramp glyph for this cell".
+   */
+  chars?: (string | null)[];
 }
 
 /** A scene declares the grid it wants and the field interpolates toward it. */

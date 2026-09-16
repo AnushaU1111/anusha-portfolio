@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { RAMP, theme, toTone } from "@/lib/ascii/ramp";
+import { drawGrid } from "@/lib/ascii/draw";
+import { createLift } from "@/lib/ascii/lift";
 import type { Grid } from "@/lib/ascii/types";
 
 interface Props {
@@ -38,46 +39,55 @@ export function AsciiField({ grid, cellW, cellH, className, hoverRadius = 0 }: P
     canvas.style.height = `${h}px`;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const lift = createLift(grid.cols, grid.rows, {
+      radius: hoverRadius,
+      riseMs: reduced ? 1 : 90,
+      fallMs: reduced ? 1 : 220,
+    });
+
     let raf = 0;
+    let running = false;
+    let lastT = 0;
     const draw = () => {
       ctx.clearRect(0, 0, w, h);
-      ctx.font = `${cellH * 0.82}px "JetBrains Mono", ui-monospace, monospace`;
-      ctx.textBaseline = "top";
-      const m = mouse.current;
-      for (let r = 0; r < grid.rows; r++) {
-        for (let c = 0; c < grid.cols; c++) {
-          const i = r * grid.cols + c;
-          const idx = grid.cells[i] ?? 0;
-          if (idx === 0) continue;
-          let t = grid.tone?.[i] ?? toTone(idx);
-          if (m && hoverRadius > 0) {
-            const dx = (c * cellW - m.x) / cellW;
-            const dy = (r * cellH - m.y) / cellH;
-            const d = Math.hypot(dx * 0.6, dy);
-            if (d < hoverRadius) t = Math.min(1, t + (1 - d / hoverRadius) * 0.6);
-          }
-          const [lr, lg, lb] = theme.low;
-          const [hr, hg, hb] = theme.high;
-          const R = Math.round(lr + (hr - lr) * t);
-          const G = Math.round(lg + (hg - lg) * t);
-          const B = Math.round(lb + (hb - lb) * t);
-          const A = theme.minAlpha + (theme.maxAlpha - theme.minAlpha) * t;
-          ctx.fillStyle = `rgba(${R},${G},${B},${A.toFixed(3)})`;
-          ctx.fillText(RAMP[idx] ?? " ", c * cellW, r * cellH);
-        }
+      drawGrid(ctx, grid, {
+        cellW,
+        cellH,
+        cursor: mouse.current,
+        lift: hoverRadius > 0 ? lift.values : null,
+        liftDensify: reduced ? 0 : 3,
+        liftDrift: reduced ? 0 : 5,
+      });
+    };
+    // Same loop as the field: run while the influence is still settling, then
+    // stop, so a figure sitting on a page costs nothing.
+    const tick = (t: number) => {
+      const dt = lastT === 0 ? 16 : Math.min(64, t - lastT);
+      lastT = t;
+      const busy = lift.step(dt, mouse.current, cellW, cellH);
+      draw();
+      if (busy) raf = requestAnimationFrame(tick);
+      else {
+        running = false;
+        lastT = 0;
       }
+    };
+    const kick = () => {
+      if (running) return;
+      running = true;
+      lastT = 0;
+      raf = requestAnimationFrame(tick);
     };
 
     const onMove = (e: PointerEvent) => {
       const rect = canvas.getBoundingClientRect();
       mouse.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(draw);
+      kick();
     };
     const onLeave = () => {
       mouse.current = null;
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(draw);
+      kick();
     };
 
     draw();

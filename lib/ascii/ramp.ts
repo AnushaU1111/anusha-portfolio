@@ -17,6 +17,10 @@ export const toTone = (i: number): number => i / RAMP_MAX;
 /** Glyph width divided by line height for a typical monospace at the sizes we use. */
 export const CELL_ASPECT = 0.6;
 
+/** One cell, in CSS px. The whole field is laid out on these two numbers. */
+export const CELL_H = 8;
+export const CELL_W = CELL_H * CELL_ASPECT;
+
 export const theme = {
   bg: "#0b0708",
   low: [150, 72, 84] as [number, number, number],

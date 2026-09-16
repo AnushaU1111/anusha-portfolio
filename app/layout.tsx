@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${cormorant.variable} ${jetbrains.variable}`}>
-      <body className="min-h-dvh bg-bg text-ink">
+      <body className="min-h-dvh bg-bg text-ink" suppressHydrationWarning>
         <Nav />
         {children}
       </body>

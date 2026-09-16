@@ -4,7 +4,7 @@
  * spectrogram, contact sheet) are generated from the content model at
  * runtime; only photographic sources go through this script.
  *
- * Usage: pnpm grids
+ * Usage: npm run grids
  */
 import { mkdir, readFile, writeFile, access } from "node:fs/promises";
 import path from "node:path";
@@ -23,8 +23,10 @@ interface Job {
 }
 
 const jobs: Job[] = [
-  { src: "assets/lily.png", out: "lily", cols: 142, gamma: 0.9, floor: 0.05, dither: 0.02 },
-  { src: "assets/portrait.png", out: "portrait", cols: 170, gamma: 1.12, floor: 0.04, dither: 0.02, mask: "assets/portrait-mask.png" },
+  // The lily is the cold open and the closing scene, centred and large, so it
+  // is sampled wider than the portrait rather than scaled up at runtime.
+  { src: "assets/lily.png", out: "lily", cols: 170, gamma: 0.9, floor: 0.05, dither: 0.02 },
+  { src: "assets/portrait.png", out: "portrait", cols: 150, gamma: 1.12, floor: 0.04, dither: 0.02, mask: "assets/portrait-mask.png" },
 ];
 
 const exists = async (p: string) => access(p).then(() => true, () => false);

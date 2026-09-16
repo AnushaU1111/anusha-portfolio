@@ -5,14 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "pnpm grids && next build",
+    "build": "npm run grids && next build",
     "start": "next start",
     "grids": "tsx scripts/build-grids.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
     "e2e": "playwright test",
-    "check": "pnpm typecheck && pnpm lint && pnpm test"
+    "check": "npm run typecheck && npm run lint && npm run test"
   },
   "dependencies": {
     "gsap": "^3.12.7",

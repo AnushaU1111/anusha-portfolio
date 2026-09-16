@@ -2,6 +2,8 @@ import { projects } from "@/content/projects";
 import { about, contact } from "@/content/about";
 import { profile } from "@/content/profile";
 import { links } from "@/content/links";
+import { Field } from "@/components/Field";
+import { MorphField } from "@/components/MorphField";
 
 /**
  * Phase 01 scaffold. Sections render their content from the model so the
@@ -10,8 +12,12 @@ import { links } from "@/content/links";
  */
 export default function Home() {
   return (
-    <main>
-      <section id="top" className="flex min-h-dvh flex-col justify-end px-12 pb-24">
+    <main className="relative">
+      <Field />
+      {/* The cold open and the portrait share one fine-grid canvas, because the
+          flower becoming the face has to be the same characters moving. */}
+      <MorphField flowerSrc="/lily.png" faceSrc="/portrait-face.jpg" targetId="portrait-box" />
+      <section id="top" className="relative z-10 flex min-h-dvh flex-col justify-end px-12 pb-24">
         <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-rose">{profile.name} &middot; ML engineer</div>
         <h1 className="mt-6 font-serif text-[132px] font-light leading-[0.86] tracking-[-0.01em]">
           Signal
@@ -19,11 +25,16 @@ export default function Home() {
           <em>from</em> noise.
         </h1>
         <p className="mt-8 max-w-[500px] font-serif text-[22px] text-[#bfb4ae]">{profile.role}</p>
+        <p className="absolute bottom-8 left-12 font-mono text-[10px] uppercase tracking-[0.3em] text-mute before:mr-3.5 before:inline-block before:h-px before:w-8 before:bg-rose before:align-middle">
+          Move the cursor
+        </p>
       </section>
 
-      <section id="about" className="grid min-h-dvh grid-cols-[660px_1fr] border-t border-line">
-        <div aria-hidden="true" />
-        <div className="border-l border-line px-10 pt-24">
+      <section id="about" className="relative z-10 grid min-h-dvh grid-cols-[660px_1fr]">
+        {/* Where the flower's characters land. MorphField reads this box every
+            frame, so once the face has arrived it scrolls with the section. */}
+        <div id="portrait-box" className="min-h-dvh" aria-hidden="true" />
+        <div className="px-10 pt-24">
           <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-rose">{about.index} &middot; Introduction</div>
           <h2 className="mt-6 font-serif text-[63px] leading-none">
             {about.headline[0]}
@@ -48,8 +59,10 @@ export default function Home() {
 
       <div id="work">
         {projects.map((p) => (
-          <section key={p.slug} id={p.slug} className="grid min-h-dvh grid-cols-[498px_1fr] border-t border-line">
-            <div className="px-12 pt-28">
+          <section key={p.slug} id={p.slug} className="relative z-10 grid min-h-dvh grid-cols-[498px_1fr]">
+            {/* The text column is opaque and the figure column is not, so the
+                field shows through on the right and never behind the type. */}
+            <div className="relative z-10 bg-bg px-12 pt-28">
               <div className="font-mono text-[10px] uppercase tracking-[0.26em] text-rose">
                 {p.index} / 07 &middot; {p.org} &middot; {p.period}
               </div>
@@ -75,12 +88,12 @@ export default function Home() {
               </ul>
               {p.credit && <p className="mt-5 font-mono text-[8.5px] uppercase tracking-[0.2em] text-[#4a4042]">{p.credit}</p>}
             </div>
-            <div className="border-l border-line" data-entry-grid={p.entryGrid} aria-hidden="true" />
+            <div data-entry-grid={p.entryGrid} aria-hidden="true" />
           </section>
         ))}
       </div>
 
-      <section id="contact" className="relative min-h-dvh border-t border-line px-12 pt-32">
+      <section id="contact" className="relative z-10 min-h-dvh px-12 pt-32">
         <div className="font-mono text-[10px] uppercase tracking-[0.26em] text-rose">Contact</div>
         <h2 className="mt-6 max-w-[900px] font-serif text-[58px] leading-[1.04]">
           {contact.headline[0]}

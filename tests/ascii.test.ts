@@ -37,6 +37,17 @@ describe("interpolateGrid", () => {
   it("rejects mismatched dimensions", () => {
     expect(() => interpolateGrid(a, { cols: 3, rows: 1, cells: [0, 0, 0] }, 0.5)).toThrow();
   });
+  it("carries literal characters, flipping each cell at its own midpoint", () => {
+    const withChars = { cols: 2, rows: 1, cells: [4, 4], chars: ["<", ">"] };
+    const plain = { cols: 2, rows: 1, cells: [4, 4] };
+    expect(interpolateGrid(withChars, plain, 0).chars).toEqual(["<", ">"]);
+    expect(interpolateGrid(withChars, plain, 1).chars).toEqual([null, null]);
+    expect(interpolateGrid(plain, withChars, 1).chars).toEqual(["<", ">"]);
+  });
+  it("leaves the chars layer off when neither side has one", () => {
+    expect(interpolateGrid(a, b, 0.5).chars).toBeUndefined();
+  });
+
   it("fitGrid pads and crops", () => {
     expect(fitGrid(a, 3, 1).cells).toEqual([0, 10, 0]);
     expect(fitGrid(a, 1, 1).cells).toEqual([0]);

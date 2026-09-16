@@ -55,11 +55,16 @@ Node 22 and pnpm 10.
 
 ## Build phases
 
-1. Scaffold — this commit. Routes, content model, tokens, CI.
-2. Content model — done here; TODOs below remain.
-3. AsciiField — renderer exists; scene targets and scroll interpolation next.
-4. Cold open and About — first two scenes on the field.
-5. Six project scenes.
+1. Scaffold — done. Routes, content model, tokens, CI.
+2. Content model — done; TODOs below remain.
+3. AsciiField — done. `components/Field.tsx` is one fixed canvas that owns every
+   figure; `lib/ascii/scenes.ts` declares scenes; GSAP ScrollTrigger progress drives
+   `interpolateGrid` between targets.
+4. Cold open and About — done. The lily assembles from noise on load, brightens
+   under the cursor, dissolves into the portrait as About pins, and the portrait
+   resolves toward neutral. The lily returns at Contact.
+5. Six project scenes — next. Each needs a generator in `lib/ascii/figures/` that
+   produces its entry grid from `content/projects.ts`.
 6. Contact, twice — closing scene and drawer share `content/links.ts`.
 7. Chrome — scroll indicator, OG image, sitemap, favicon.
 8. Performance and access — reduced motion, mobile grids, Lighthouse.

@@ -20,6 +20,68 @@ export const Source = z.object({
 });
 export type Source = z.infer<typeof Source>;
 
+/**
+ * Every generated figure declares its numbers here rather than inside the
+ * generator, so the figure and the caption beside it read the same object.
+ * Shape that is a drawing decision rather than a fact, a node's position or
+ * a frequency band, stays in lib/ascii/figures and the scene says so in
+ * `illustrative`.
+ */
+export const FigureSpec = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("pareto"),
+    models: z.number().int().positive(),
+    agents: z.number().int().positive(),
+    /** Quality in [0, 1] and cost in dollars, for the two models the scene is about. */
+    production: z.object({ quality: z.number(), cost: z.number(), p95: z.number() }),
+    recommended: z.object({ quality: z.number(), cost: z.number(), p95: z.number() }),
+    costAxis: z.array(z.number().positive()).min(2),
+  }),
+  z.object({
+    kind: z.literal("pipeline"),
+    inputs: z.array(z.string().min(1)).min(1),
+    normalise: z.array(z.string().min(1)).min(1),
+    indexes: z.array(z.string().min(1)).min(1),
+    scorer: z.string().min(1),
+    model: z.string().min(1),
+    gate: z.string().min(1),
+    outputs: z.array(z.string().min(1)).min(1),
+  }),
+  z.object({
+    kind: z.literal("graph"),
+    nodeTypes: z.array(z.string().min(1)).min(1),
+    edgeTypes: z.array(z.string().min(1)).min(1),
+    /** The illustrative instance the entry figure draws. */
+    nodes: z.number().int().positive(),
+    edges: z.number().int().positive(),
+  }),
+  z.object({
+    kind: z.literal("corpus"),
+    posts: z.number().int().positive(),
+  }),
+  z.object({
+    kind: z.literal("spectrogram"),
+    frames: z.number().int().positive(),
+    classes: z
+      .array(
+        z.object({
+          name: z.string().min(1),
+          support: z.number().int().positive(),
+          precision: z.number(),
+          recall: z.number(),
+          f1: z.number(),
+        }),
+      )
+      .min(2),
+  }),
+  z.object({
+    kind: z.literal("contactSheet"),
+    total: z.number().int().positive(),
+    positive: z.number().int().positive(),
+  }),
+]);
+export type FigureSpec = z.infer<typeof FigureSpec>;
+
 export const Scene = z.object({
   /** Two-digit scene number as shown in the eyebrow. */
   index: z.string().regex(/^\d{2}$/),
@@ -38,6 +100,8 @@ export const Scene = z.object({
   pinned: z.boolean(),
   /** Which pre-built grid the entry figure uses. */
   entryGrid: z.string().min(1),
+  /** The data the entry figure is generated from. */
+  figure: FigureSpec,
   /** Figures marked illustrative say so on the figure. */
   illustrative: z.array(z.string()).default([]),
   sources: z.array(Source).min(1),
