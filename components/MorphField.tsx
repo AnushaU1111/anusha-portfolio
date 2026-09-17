@@ -36,6 +36,12 @@ const FACE_COLS = 440;
 /** The share of the hero's scroll spent assembling the flower. */
 const FLY_COMPLETE = 0.82;
 /**
+ * The share of the flower's assembly after which the hero's statement fades
+ * in. The line is meant to arrive as the last characters land, so it waits
+ * until the figure is nearly whole and is fully there when it is.
+ */
+const LILY_FORMED = 0.85;
+/**
  * How far into the chart's arrival the markers stop moving enough to be worth
  * pointing at. Below this the cursor would be picking models out of a cloud
  * that is still in flight.
@@ -187,6 +193,13 @@ export function MorphField({
 
     let disposed = false;
     const alive = () => !disposed;
+    /** Last value published to --lily-in, so the root is not restyled per frame. */
+    let lastFormed = -1;
+    // Presence of the attribute is what arms the gate. Until this runs — no
+    // JS, a failed mount, the server-rendered first paint — the hero statement
+    // stays visible, because a missing flower must not cost the page its copy.
+    const root = document.documentElement;
+    root.dataset.lily = "gated";
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     interface Built {
@@ -425,6 +438,13 @@ export function MorphField({
       const vh = window.innerHeight || 1;
       const vw = window.innerWidth || 1;
       const flyT = reduced ? 1 : clamp01(window.scrollY / (vh * FLY_COMPLETE));
+      // Hand the flower's own progress to the hero copy, which fades in on it.
+      // Under reduced motion flyT is already 1, so the line is simply there.
+      const formed = clamp01((flyT - LILY_FORMED) / (1 - LILY_FORMED));
+      if (Math.abs(formed - lastFormed) > 0.004) {
+        lastFormed = formed;
+        document.documentElement.style.setProperty("--lily-in", formed.toFixed(3));
+      }
 
       const faceTarget = boxOf(targetId);
       const faceOrigin = faceTarget
@@ -832,6 +852,8 @@ export function MorphField({
 
     return () => {
       disposed = true;
+      delete root.dataset.lily;
+      root.style.removeProperty("--lily-in");
       cancelAnimationFrame(raf);
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", onResize);
@@ -917,7 +939,7 @@ export function MorphField({
                 one place on this site where it carries the data, so the axis
                 has to say which way the frequency runs. */}
             <span
-              className="absolute whitespace-nowrap text-[9.5px] uppercase tracking-[0.22em] text-[#6d6265]"
+              className="absolute whitespace-nowrap text-[12px] uppercase tracking-[0.22em] text-[#8b8083]"
               style={{
                 left: -8,
                 top: "50%",
@@ -927,10 +949,10 @@ export function MorphField({
             >
               Mel frequency &uarr;
             </span>
-            <span className="absolute bottom-[-18px] left-0 whitespace-nowrap text-[9.5px] uppercase tracking-[0.2em] text-[#6d6265]">
+            <span className="absolute bottom-[-18px] left-0 whitespace-nowrap text-[12px] uppercase tracking-[0.2em] text-[#8b8083]">
               Time &rarr;
             </span>
-            <span className="absolute bottom-[-18px] right-0 whitespace-nowrap text-[9.5px] uppercase tracking-[0.2em] text-[#5a4e51]">
+            <span className="absolute bottom-[-18px] right-0 whitespace-nowrap text-[12px] uppercase tracking-[0.2em] text-[#7c6e71]">
               {wave.cols.toLocaleString()} &times; {wave.rows} bins &middot; brightness is energy
             </span>
           </div>
@@ -960,7 +982,7 @@ function PipeChrome({ pipe }: { pipe: Pipe }) {
       {pipe.nodes.map((n) => (
         <span
           key={`${n.kind}-${n.label}`}
-          className={`absolute whitespace-nowrap text-[13px] tracking-[0.06em] ${NODE_CLASS[n.kind]}`}
+          className={`absolute whitespace-nowrap text-[15px] tracking-[0.06em] ${NODE_CLASS[n.kind]}`}
           style={{
             left: n.x,
             top: n.y,
@@ -998,7 +1020,7 @@ function Chrome({ chart, hover }: { chart: ParetoChart; hover: number }) {
             style={{ left: t.x, top: plot.top + plot.height, height: 6 }}
           />
           <span
-            className="absolute -translate-x-1/2 text-[11px] tracking-[0.14em] text-[#9c8f8a]"
+            className="absolute -translate-x-1/2 text-[13.5px] tracking-[0.14em] text-[#ab9f9b]"
             style={{ left: t.x, top: plot.top + plot.height + 12 }}
           >
             {t.label}
@@ -1006,7 +1028,7 @@ function Chrome({ chart, hover }: { chart: ParetoChart; hover: number }) {
         </span>
       ))}
       <span
-        className="absolute whitespace-nowrap text-[10.5px] uppercase tracking-[0.22em] text-[#9c8f8a]"
+        className="absolute whitespace-nowrap text-[13px] uppercase tracking-[0.22em] text-[#ab9f9b]"
         style={{
           left: plot.left - 10,
           top: plot.top + plot.height / 2,
@@ -1017,7 +1039,7 @@ function Chrome({ chart, hover }: { chart: ParetoChart; hover: number }) {
         Quality score &uarr;
       </span>
       <span
-        className="absolute whitespace-nowrap text-[10.5px] uppercase tracking-[0.2em] text-[#9c8f8a]"
+        className="absolute whitespace-nowrap text-[13px] uppercase tracking-[0.2em] text-[#ab9f9b]"
         style={{ left: plot.left, top: plot.top + plot.height + 30 }}
       >
         Cost per thousand calls &rarr;
@@ -1026,7 +1048,7 @@ function Chrome({ chart, hover }: { chart: ParetoChart; hover: number }) {
           corner nothing can occupy, and above the plot it would run into the
           site's nav on a narrow window. */}
       <div
-        className="absolute flex gap-6 whitespace-nowrap text-[10px] uppercase tracking-[0.2em] text-[#9c8f8a]"
+        className="absolute flex gap-6 whitespace-nowrap text-[12.5px] uppercase tracking-[0.2em] text-[#ab9f9b]"
         style={{ left: plot.left + 16, top: plot.top + 14 }}
       >
         <span className="text-rose">&#9679; frontier</span>
@@ -1043,8 +1065,8 @@ function Chrome({ chart, hover }: { chart: ParetoChart; hover: number }) {
           own line, at the far end of it. */}
       {hover < 0 && (
         <span
-          className="absolute -translate-x-full whitespace-nowrap text-[10px] uppercase tracking-[0.24em] text-[#7a6c6f] before:mr-3 before:inline-block before:h-px before:w-8 before:bg-rose before:align-middle"
-          style={{ left: plot.left + plot.width, top: plot.top + plot.height + 30 }}
+          className="absolute -translate-x-full whitespace-nowrap text-[12.5px] uppercase tracking-[0.24em] text-[#928587] before:mr-3 before:inline-block before:h-px before:w-8 before:bg-rose before:align-middle"
+          style={{ left: plot.left + plot.width - 8, top: plot.top + plot.height + 30 }}
         >
           Point at a model
         </span>
@@ -1156,16 +1178,16 @@ function Card({
       className="absolute border-l-2 border-rose bg-[#0b0708]/94 px-4 py-2.5"
       style={{ left, top, width: CARD_W }}
     >
-      <div className="whitespace-nowrap text-[11.5px] uppercase tracking-[0.14em] text-[#ded5ce]">
+      <div className="whitespace-nowrap text-[14px] uppercase tracking-[0.14em] text-[#ded5ce]">
         <span className="text-rose">{glyph}</span> {model.label}
-        <span className="text-[#8d817c]"> &middot; {roleFor(chart, index, model)}</span>
+        <span className="text-[#a09490]"> &middot; {roleFor(chart, index, model)}</span>
       </div>
-      <div className="mt-2 flex gap-4 whitespace-nowrap text-[11px] tracking-[0.08em] text-[#bfb4ae]">
+      <div className="mt-2 flex gap-4 whitespace-nowrap text-[13.5px] tracking-[0.08em] text-[#bfb4ae]">
         <span>quality {model.quality.toFixed(2)}</span>
         <span>cost ${model.cost.toFixed(2)}</span>
         <span>p95 {model.p95.toFixed(1)}s</span>
       </div>
-      <div className="mt-1.5 whitespace-nowrap text-[10px] uppercase tracking-[0.16em] text-[#8d817c]">{note}</div>
+      <div className="mt-1.5 whitespace-nowrap text-[12.5px] uppercase tracking-[0.16em] text-[#a09490]">{note}</div>
     </div>
   );
 }
@@ -1182,10 +1204,10 @@ const GRAPH_CARD_W = 356;
 const GRAPH_CARD_H = 224;
 
 const NODE_TONE: Record<NodeKind, string> = {
-  S: "text-[#8d817c]",
+  S: "text-[#a09490]",
   R: "text-[#ded5ce]",
   F: "text-[#a2958f]",
-  T: "text-[#8d817c]",
+  T: "text-[#a09490]",
 };
 
 function GraphChrome({
@@ -1215,7 +1237,7 @@ function GraphChrome({
       {graph.nodes.map((n, i) => (
         <span
           key={n.id}
-          className={`absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[12.5px] tracking-[0.06em] transition-opacity duration-200 ${
+          className={`absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[14.5px] tracking-[0.06em] transition-opacity duration-200 ${
             i === picked ? "text-rose" : NODE_TONE[n.kind]
           }`}
           style={{ left: n.x, top: n.y, opacity: node ? (lit.has(n.label) ? 1 : 0.22) : 1 }}
@@ -1230,7 +1252,7 @@ function GraphChrome({
         />
       )}
 
-      <div className="absolute inset-x-0 bottom-4 flex flex-wrap items-baseline gap-x-5 gap-y-1 px-1 text-[9px] uppercase tracking-[0.16em] text-[#6d6265]">
+      <div className="absolute inset-x-0 bottom-4 flex flex-wrap items-baseline gap-x-5 gap-y-1 px-1 text-[11.5px] uppercase tracking-[0.16em] text-[#8b8083]">
         <span>( ) stakeholder</span>
         <span className="text-[#bfb4ae]">[ ] requirement</span>
         <span>&lt; &gt; feature</span>
@@ -1238,7 +1260,7 @@ function GraphChrome({
         <span>&middot;&middot;&middot; owns</span>
         <span>&mdash; depends</span>
         <span>::: validates</span>
-        {!node && <span className="ml-auto text-[#5a4e51]">Point at a node</span>}
+        {!node && <span className="ml-auto pr-2 text-[#7c6e71]">Point at a node</span>}
       </div>
 
       {node && near && <GraphCard node={node} near={near} line={line} graph={graph} />}
@@ -1251,7 +1273,7 @@ function Relation({ label, ids }: { label: string; ids: string[] }) {
   if (ids.length === 0) return null;
   return (
     <span className="whitespace-nowrap">
-      <span className="text-[#6d6265]">{label} </span>
+      <span className="text-[#8b8083]">{label} </span>
       <span className="text-[#cfc4be]">{ids.join(", ")}</span>
     </span>
   );
@@ -1284,21 +1306,21 @@ function GraphCard({
   );
   return (
     <div className="absolute border border-line bg-[#0b0708]/95 px-6 py-5" style={{ left, top, width: GRAPH_CARD_W }}>
-      <div className="text-[10px] uppercase tracking-[0.2em]">
+      <div className="text-[12.5px] uppercase tracking-[0.2em]">
         <span className="text-rose">{node.label}</span>
-        <span className="text-[#4a4042]"> &middot; </span>
-        <span className="text-[#6d6265]">{line ? "extracted from transcript" : "no transcript line in this instance"}</span>
+        <span className="text-[#6b5d60]"> &middot; </span>
+        <span className="text-[#8b8083]">{line ? "extracted from transcript" : "no transcript line in this instance"}</span>
       </div>
       {line && (
         <>
-          <p className="mt-4 font-serif text-[19px] italic leading-[1.45] text-[#ded5ce]">&ldquo;{line.quote}&rdquo;</p>
-          <div className="mt-4 border-t border-line pt-3 text-[9.5px] tracking-[0.12em] text-[#8d817c]">
-            {line.at} <span className="text-[#4a4042]">&middot;</span> {line.speaker}{" "}
-            <span className="text-[#4a4042]">&middot;</span> {line.session}
+          <p className="mt-4 font-serif text-[20.5px] italic leading-[1.45] text-[#ded5ce]">&ldquo;{line.quote}&rdquo;</p>
+          <div className="mt-4 border-t border-line pt-3 text-[12px] tracking-[0.12em] text-[#a09490]">
+            {line.at} <span className="text-[#6b5d60]">&middot;</span> {line.speaker}{" "}
+            <span className="text-[#6b5d60]">&middot;</span> {line.session}
           </div>
         </>
       )}
-      <div className={`flex flex-wrap gap-x-6 gap-y-1.5 text-[10px] tracking-[0.06em] ${line ? "mt-2" : "mt-4 border-t border-line pt-3"}`}>
+      <div className={`flex flex-wrap gap-x-6 gap-y-1.5 text-[12.5px] tracking-[0.06em] ${line ? "mt-2" : "mt-4 border-t border-line pt-3"}`}>
         <Relation label="owned by" ids={near.ownedBy} />
         <Relation label="owns" ids={near.owns} />
         <Relation label="validated by" ids={near.validatedBy} />
@@ -1323,7 +1345,7 @@ function ClusterChrome({ map }: { map: ClusterMap }) {
         .map((c: Cluster) => (
           <span
             key={c.id}
-            className="absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[10px] uppercase tracking-[0.18em] text-[#ded5ce]"
+            className="absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[12.5px] uppercase tracking-[0.18em] text-[#ded5ce]"
             style={{ left: c.x, top: c.y - c.r - 9 }}
           >
             {c.label}
@@ -1344,15 +1366,15 @@ function BarChrome({ chart }: { chart: BarChart }) {
       {chart.rows.map((r) => (
         <span key={r.label}>
           <span
-            className={`absolute -translate-y-1/2 whitespace-nowrap text-right text-[10px] uppercase tracking-[0.16em] ${
+            className={`absolute -translate-y-1/2 whitespace-nowrap text-right text-[12.5px] uppercase tracking-[0.16em] ${
               r.best ? "text-rose" : "text-[#bfb4ae]"
             }`}
-            style={{ right: chart.width - r.x0 + 14, top: r.y, width: 200 }}
+            style={{ right: chart.width - r.x0 + 14, top: r.y, width: Math.max(90, r.x0 - 20) }}
           >
             {r.label}
           </span>
           <span
-            className={`absolute -translate-y-1/2 whitespace-nowrap text-[11px] tracking-[0.06em] ${
+            className={`absolute -translate-y-1/2 whitespace-nowrap text-[13.5px] tracking-[0.06em] ${
               r.best ? "text-[#f4ece6]" : "text-[#ded5ce]"
             }`}
             style={{ left: chart.valueX + 14, top: r.y }}
@@ -1361,7 +1383,7 @@ function BarChrome({ chart }: { chart: BarChart }) {
           </span>
         </span>
       ))}
-      <span className="absolute right-0 top-[-20px] whitespace-nowrap text-[9px] uppercase tracking-[0.18em] text-[#5a4e51]">
+      <span className="absolute right-0 top-[-20px] whitespace-nowrap text-[11.5px] uppercase tracking-[0.18em] text-[#7c6e71]">
         Scale {chart.lo.toFixed(2)} &rarr; {chart.hi.toFixed(2)}
       </span>
     </div>

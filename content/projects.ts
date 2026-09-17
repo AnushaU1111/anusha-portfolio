@@ -9,6 +9,7 @@ const raw = [
   {
     index: "02",
     slug: "neuraluna",
+    name: "Model Selection",
     org: "Neuraluna AI",
     period: "Summer 2026",
     headline: ["Thirty-two models,", "one wrong default."],
@@ -41,6 +42,7 @@ const raw = [
   {
     index: "03",
     slug: "temple-rag",
+    name: "Multilingual RAG",
     org: "Temple University",
     period: "Spring 2025",
     headline: ["A patient who cannot read", "still needs the answer."],
@@ -97,6 +99,7 @@ const raw = [
   {
     index: "04",
     slug: "reqtrace",
+    name: "ReqTrace",
     org: "NC State, CSC 510",
     period: "Fall 2025",
     headline: ["Every node points back", "to something someone said."],
@@ -183,6 +186,7 @@ const raw = [
   {
     index: "05",
     slug: "affordability",
+    name: "Affordability",
     org: "NC State",
     period: "2026",
     headline: ["1.1 million posts, three model heads,", "one pass."],
@@ -233,6 +237,7 @@ const raw = [
   {
     index: "06",
     slug: "acoustic",
+    name: "Acoustic Events",
     org: "NC State",
     period: "Spring 2026",
     headline: ["Trained on ten people. Tested on three it had", "never heard."],
@@ -274,6 +279,7 @@ const raw = [
   {
     index: "07",
     slug: "skin-cancer",
+    name: "Skin Cancer Screening",
     org: "NC State, CSC 542",
     period: "Spring 2026",
     headline: ["Missing a cancer costs more than a", "false alarm."],

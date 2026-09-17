@@ -65,7 +65,12 @@ export interface BarOptions {
 
 export const buildBars = (spec: ContactSheetSpec, o: BarOptions): BarChart => {
   const { cellW, cellH, width, height } = o;
-  const padLeft = o.padLeft ?? 196;
+  // The gutter has to hold the longest stage name, which is set in the mono
+  // face at roughly 0.6em plus its own tracking. A fixed gutter was fine while
+  // those labels were 10px; at a legible size the longest one runs into its
+  // own bar. Derived, and capped so a very long name cannot eat the plot.
+  const longest = spec.stages.reduce((n, k) => Math.max(n, k.label.length), 0);
+  const padLeft = o.padLeft ?? Math.min(width * 0.36, 30 + longest * 9.8);
   const padRight = o.padRight ?? 76;
   const padTop = o.padTop ?? 16;
   const padBottom = o.padBottom ?? 16;

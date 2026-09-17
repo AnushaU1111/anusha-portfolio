@@ -1,4 +1,5 @@
 import type { Scene, SceneDetail } from "@/content/schema";
+import { SceneHead } from "@/components/SceneHead";
 
 /**
  * The Temple scene, which is two states rather than one.
@@ -39,13 +40,13 @@ function Block({
 }) {
   return (
     <section className="mt-9 first:mt-0">
-      <header className="flex items-baseline gap-3 overflow-hidden border-b border-line pb-2 font-mono text-[9.5px] uppercase tracking-[0.2em] text-[#6d6265]">
+      <header className="flex items-baseline gap-3 overflow-hidden border-b border-line pb-2 font-mono text-[12px] uppercase tracking-[0.2em] text-[#8b8083]">
         <span className="whitespace-nowrap">Fig. {fig}</span>
-        <span className="text-[#4a4042]">&middot;</span>
+        <span className="text-[#6b5d60]">&middot;</span>
         <span className="whitespace-nowrap text-[#ded5ce]">{title}</span>
-        <span className="text-[#4a4042]">/</span>
+        <span className="text-[#6b5d60]">/</span>
         <span className="truncate">{sub}</span>
-        <span className="ml-auto whitespace-nowrap text-[#5a4e51]">{aside}</span>
+        <span className="ml-auto whitespace-nowrap text-[#7c6e71]">{aside}</span>
       </header>
       {children}
     </section>
@@ -62,24 +63,19 @@ export function TempleSection({ scene, detail }: { scene: Scene; detail: SceneDe
       <div className="h-[170dvh]">
         <div className="sticky top-0 h-dvh">
           <div className="absolute left-12 top-[9dvh] max-w-[760px]">
-            <div className="font-mono text-[10px] uppercase tracking-[0.26em] text-rose">
-              {scene.index} / 07 &middot; {scene.org} &middot; {scene.period}
-            </div>
-            <h2 className="mt-5 font-serif text-[clamp(34px,4.4vw,54px)] leading-[1.06]">
-              {scene.headline[0]} <em>{scene.headline[1]}</em>
-            </h2>
-            <p className="mt-5 max-w-[520px] text-[16px] leading-[1.6] text-[#a2958f]">{scene.lede}</p>
+            <SceneHead scene={scene} />
+            <p className="mt-5 max-w-[520px] text-[17.5px] leading-[1.6] text-[#a2958f]">{scene.lede}</p>
           </div>
           {/* Where the chart's characters land. MorphField reads this box every
               frame; the diagram's own top and bottom padding keep it clear of
               the headline above it. */}
           <div id="pipe-box" className="absolute inset-0" aria-hidden="true" />
-          <div className="absolute bottom-8 right-12 text-right font-mono text-[9.5px] uppercase leading-[1.8] tracking-[0.2em] text-[#5a4e51]">
+          <div className="absolute bottom-8 right-12 text-right font-mono text-[12px] uppercase leading-[1.8] tracking-[0.2em] text-[#7c6e71]">
             <div>
-              Fig. {scene.index}A <span className="text-[#4a4042]">&middot;</span> request path
+              Fig. {scene.index}A <span className="text-[#6b5d60]">&middot;</span> request path
             </div>
             <div>
-              {detail.waysIn.length} ways in <span className="text-[#4a4042]">&middot;</span>{" "}
+              {detail.waysIn.length} ways in <span className="text-[#6b5d60]">&middot;</span>{" "}
               {scene.figure.kind === "pipeline" ? scene.figure.outputs.length : 2} ways out
             </div>
           </div>
@@ -93,33 +89,28 @@ export function TempleSection({ scene, detail }: { scene: Scene; detail: SceneDe
             width the panel becomes one column and reads down instead. */}
         <div className="grid min-h-dvh grid-cols-1 gap-x-10 gap-y-14 px-12 pb-24 pt-20 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,470px)_minmax(0,1fr)]">
           <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.26em] text-rose">
-              {scene.index} / 07 &middot; {scene.org}
-            </div>
-            <h2 className="mt-6 font-serif text-[46px] leading-[1.06]">
-              {scene.headline[0]}
-              <br />
-              <em className="text-rose">{scene.headline[1]}</em>
-            </h2>
+            {/* The results state restates the header, because it arrives as
+                its own screen and the entry state has scrolled away by then. */}
+            <SceneHead scene={scene} />
             {scene.body.map((t) => (
-              <p key={t} className="mt-4 max-w-[640px] text-[16.5px] leading-[1.58] text-[#a2958f]">{t}</p>
+              <p key={t} className="mt-4 max-w-[640px] text-[18px] leading-[1.58] text-[#a2958f]">{t}</p>
             ))}
-            <p className="mt-6 max-w-[640px] border-l border-rose pl-5 text-[16.5px] leading-[1.58] text-[#ded5ce]">{scene.pull}</p>
+            <p className="mt-6 max-w-[640px] border-l border-rose pl-5 text-[18px] leading-[1.58] text-[#ded5ce]">{scene.pull}</p>
             <dl className="mt-9 flex flex-wrap gap-x-9 gap-y-5 border-t border-line pt-6">
               {scene.metrics.map((m) => (
                 <div key={m.label}>
-                  <dd className={`font-serif text-[36px] leading-none ${m.accent ? "text-rose" : ""}`}>{m.value}</dd>
-                  <dt className="mt-2 font-mono text-[8.5px] uppercase tracking-[0.22em] text-mute">{m.label}</dt>
+                  <dd className={`font-serif text-[39px] leading-none ${m.accent ? "text-rose" : ""}`}>{m.value}</dd>
+                  <dt className="mt-2 font-mono text-[11px] uppercase tracking-[0.22em] text-mute">{m.label}</dt>
                 </div>
               ))}
             </dl>
             <ul className="mt-7 flex flex-wrap gap-1.5">
               {scene.stack.map((s) => (
-                <li key={s} className="border border-line px-2.5 py-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-[#8d817c]">{s}</li>
+                <li key={s} className="border border-line px-2.5 py-1.5 font-mono text-[11.5px] uppercase tracking-[0.14em] text-[#a09490]">{s}</li>
               ))}
             </ul>
             {scene.credit && (
-              <p className="mt-6 max-w-[420px] font-mono text-[8.5px] uppercase leading-[1.7] tracking-[0.2em] text-[#4a4042]">
+              <p className="mt-6 max-w-[420px] font-mono text-[11px] uppercase leading-[1.7] tracking-[0.2em] text-[#6b5d60]">
                 {scene.credit}
               </p>
             )}
@@ -135,9 +126,9 @@ export function TempleSection({ scene, detail }: { scene: Scene; detail: SceneDe
               <dl className="mt-3">
                 {detail.waysIn.map((w) => (
                   <div key={w.key} className="flex flex-wrap items-baseline gap-x-5 gap-y-1 py-1.5">
-                    <dt className="w-16 shrink-0 font-mono text-[9.5px] uppercase tracking-[0.2em] text-rose">{w.key}</dt>
-                    <dd className="min-w-0 text-[16px] text-[#ded5ce]">{w.what}</dd>
-                    <dd className="ml-auto pl-6 text-right font-mono text-[9.5px] uppercase tracking-[0.16em] text-[#6d6265]">
+                    <dt className="w-16 shrink-0 font-mono text-[12px] uppercase tracking-[0.2em] text-rose">{w.key}</dt>
+                    <dd className="min-w-0 text-[17.5px] text-[#ded5ce]">{w.what}</dd>
+                    <dd className="ml-auto pl-6 text-right font-mono text-[12px] uppercase tracking-[0.16em] text-[#8b8083]">
                       {w.how}
                     </dd>
                   </div>
@@ -154,23 +145,23 @@ export function TempleSection({ scene, detail }: { scene: Scene; detail: SceneDe
               <dl className="mt-4">
                 {detail.retrieval.map((r) => (
                   <div key={r.label} className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-1">
-                    <dt className="w-40 shrink-0 text-right font-mono text-[10px] uppercase tracking-[0.16em] text-[#bfb4ae]">
+                    <dt className="w-40 shrink-0 text-right font-mono text-[12.5px] uppercase tracking-[0.16em] text-[#bfb4ae]">
                       {r.label}
                     </dt>
-                    <dd className="shrink-0 font-mono text-[10px] tracking-[0.04em] text-rose">
+                    <dd className="shrink-0 font-mono text-[12.5px] tracking-[0.04em] text-rose">
                       {bar(Math.round(r.weight * 36))}
                     </dd>
-                    <dd className="w-10 shrink-0 font-mono text-[11px] text-[#ded5ce]">{r.weight.toFixed(2)}</dd>
-                    <dd className="min-w-0 truncate font-mono text-[9.5px] uppercase tracking-[0.16em] text-[#6d6265]">
+                    <dd className="w-10 shrink-0 font-mono text-[13.5px] text-[#ded5ce]">{r.weight.toFixed(2)}</dd>
+                    <dd className="min-w-0 truncate font-mono text-[12px] uppercase tracking-[0.16em] text-[#8b8083]">
                       {r.source}
                     </dd>
                   </div>
                 ))}
                 <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                  <dt className="w-40 shrink-0 text-right font-mono text-[9.5px] uppercase tracking-[0.2em] text-[#6d6265]">
+                  <dt className="w-40 shrink-0 text-right font-mono text-[12px] uppercase tracking-[0.2em] text-[#8b8083]">
                     Hybrid alpha
                   </dt>
-                  <dd className="flex flex-wrap items-baseline gap-x-3 font-mono text-[10px] uppercase tracking-[0.16em] text-[#6d6265]">
+                  <dd className="flex flex-wrap items-baseline gap-x-3 font-mono text-[12.5px] uppercase tracking-[0.16em] text-[#8b8083]">
                     <span className="shrink-0">keyword</span>
                     <span className="shrink-0 tracking-[0.04em] text-rose">{slider(detail.hybridAlpha)}</span>
                     <span className="shrink-0">semantic</span>
@@ -187,12 +178,12 @@ export function TempleSection({ scene, detail }: { scene: Scene; detail: SceneDe
             >
               <ul className="mt-4 flex flex-wrap gap-2">
                 {detail.assessed.map((a) => (
-                  <li key={a} className="border border-line px-3 py-2 font-mono text-[9.5px] uppercase tracking-[0.16em] text-[#bfb4ae]">
+                  <li key={a} className="border border-line px-3 py-2 font-mono text-[12px] uppercase tracking-[0.16em] text-[#bfb4ae]">
                     {a}
                   </li>
                 ))}
               </ul>
-              <p className="mt-4 border-l border-rose pl-5 font-mono text-[10px] leading-[1.7] tracking-[0.04em] text-[#8d817c]">
+              <p className="mt-4 border-l border-rose pl-5 font-mono text-[12.5px] leading-[1.7] tracking-[0.04em] text-[#a09490]">
                 {detail.assessedNote}
               </p>
             </Block>
@@ -206,15 +197,15 @@ export function TempleSection({ scene, detail }: { scene: Scene; detail: SceneDe
               <dl className="mt-3">
                 {detail.keeps.map((k) => (
                   <div key={k.label} className="flex flex-wrap items-baseline gap-x-5 gap-y-1 py-1.5">
-                    <dt className="w-40 shrink-0 font-mono text-[9.5px] uppercase tracking-[0.2em] text-rose">{k.label}</dt>
-                    <dd className="min-w-0 text-[16px] text-[#ded5ce]">{k.note}</dd>
+                    <dt className="w-40 shrink-0 font-mono text-[12px] uppercase tracking-[0.2em] text-rose">{k.label}</dt>
+                    <dd className="min-w-0 text-[17.5px] text-[#ded5ce]">{k.note}</dd>
                   </div>
                 ))}
               </dl>
             </Block>
 
             {scene.illustrative.length > 0 && (
-              <p className="mt-10 border-t border-line pt-3 text-right font-mono text-[8.5px] uppercase tracking-[0.2em] text-[#4a4042]">
+              <p className="mt-10 border-t border-line pt-3 text-right font-mono text-[11px] uppercase tracking-[0.2em] text-[#6b5d60]">
                 {scene.illustrative.join(" · ")}
               </p>
             )}

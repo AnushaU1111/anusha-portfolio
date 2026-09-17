@@ -80,35 +80,35 @@ export function ContactDrawer({ open, onClose, returnFocusTo }: Props) {
         <button
           type="button"
           onClick={close}
-          className="absolute right-6 top-6 font-mono text-[9px] uppercase tracking-[0.2em] text-mute"
+          className="absolute right-6 top-6 font-mono text-[11.5px] uppercase tracking-[0.2em] text-mute"
         >
           esc &times;
         </button>
-        <div className="font-mono text-[9.5px] uppercase tracking-[0.28em] text-rose">Contact</div>
-        <h2 className="mt-4 font-serif text-[31px] font-light leading-[1.14] text-[#ede4de]">
+        <div className="font-mono text-[12px] uppercase tracking-[0.28em] text-rose">Contact</div>
+        <h2 className="mt-4 font-serif text-[34px] font-light leading-[1.14] text-[#ede4de]">
           {contact.headline[0]}
           <br />
-          <em>{contact.headline[1]}</em>
+          {contact.headline[1]}
         </h2>
         <ul className="mt-8 border-t border-line">
           {links.map((l) => (
             <li key={l.label} className="border-b border-line">
               <a href={l.href} download={l.download} className="group flex items-baseline gap-3 py-3.5 no-underline">
-                <span className="font-serif text-[21px] font-light text-[#cfc4be] group-hover:text-[#f4ece6]">{l.label}</span>
-                <span className="flex-1 font-mono text-[8px] tracking-[0.12em] text-transparent group-hover:text-mute">{l.reveal}</span>
-                <span className="font-mono text-[11px] text-[#4a4042] group-hover:text-rose">&rarr;</span>
+                <span className="font-serif text-[23px] font-light text-[#cfc4be] group-hover:text-[#f4ece6]">{l.label}</span>
+                <span className="flex-1 font-mono text-[10.5px] tracking-[0.12em] text-transparent group-hover:text-mute">{l.reveal}</span>
+                <span className="font-mono text-[13.5px] text-[#6b5d60] group-hover:text-rose">&rarr;</span>
               </a>
             </li>
           ))}
         </ul>
         <dl className="mt-8 space-y-5">
           <div>
-            <dt className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#4a4042]">Based in</dt>
-            <dd className="mt-2 font-serif text-[14.5px] font-light text-[#c8bcb6]">{profile.location}</dd>
+            <dt className="font-mono text-[10.5px] uppercase tracking-[0.22em] text-[#6b5d60]">Based in</dt>
+            <dd className="mt-2 font-serif text-[16px] font-light text-[#c8bcb6]">{profile.location}</dd>
           </div>
           <div>
-            <dt className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#4a4042]">Available</dt>
-            <dd className="mt-2 font-serif text-[14.5px] font-light text-[#c8bcb6]">{profile.available}</dd>
+            <dt className="font-mono text-[10.5px] uppercase tracking-[0.22em] text-[#6b5d60]">Available</dt>
+            <dd className="mt-2 font-serif text-[16px] font-light text-[#c8bcb6]">{profile.available}</dd>
           </div>
         </dl>
       </aside>

@@ -3,7 +3,7 @@
 @theme {
   --color-bg: #0b0708;
   --color-ink: #e6dfd8;
-  --color-mute: #6f6366;
+  --color-mute: #8a7e81;
   --color-rose: #c46e78;
   --color-line: #1f1417;
   --font-serif: var(--font-cormorant), "Cormorant", serif;
@@ -13,6 +13,24 @@
 html { background: var(--color-bg); color: var(--color-ink); }
 body { font-family: var(--font-serif); font-weight: 300; -webkit-font-smoothing: antialiased; }
 em { font-style: italic; }
+
+/*
+ * Copy that waits for the flower. MorphField sets data-lily on the root when
+ * it takes over and drives --lily-in from the flower's own assembly, so the
+ * gate only applies once something is actually there to wait for: with no JS,
+ * or before the field has mounted, these elements render normally.
+ *
+ * Driven straight off scroll rather than through a transition, so scrubbing
+ * back up takes the line away again instead of leaving it lagging behind.
+ */
+[data-lily="gated"] .lily-gated {
+  opacity: var(--lily-in, 1);
+  translate: 0 calc((1 - var(--lily-in, 1)) * 0.22em);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-lily="gated"] .lily-gated { translate: none; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }

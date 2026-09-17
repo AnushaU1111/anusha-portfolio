@@ -10,6 +10,7 @@ import { AcousticSection } from "@/components/AcousticSection";
 import { ScreeningSection } from "@/components/ScreeningSection";
 import { CorpusSection } from "@/components/CorpusSection";
 import { TempleSection } from "@/components/TempleSection";
+import { SceneHead } from "@/components/SceneHead";
 
 /**
  * Phase 01 scaffold. Sections render their content from the model so the
@@ -85,16 +86,36 @@ export default function Home() {
         {...waves}
         {...barsProps}
       />
-      <section id="top" className="relative z-10 flex min-h-dvh flex-col justify-end px-12 pb-24">
-        <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-rose">{profile.name} &middot; ML engineer</div>
-        <h1 className="mt-6 font-serif text-[132px] font-light leading-[0.86] tracking-[-0.01em]">
-          Signal
-          <br />
-          <em>from</em> noise.
+      {/* Bottom padding clears the centred scroll cue, which is absolutely
+          positioned and so cannot push the copy up itself. */}
+      <section id="top" className="relative z-10 flex min-h-dvh flex-col justify-end px-12 pb-36">
+        {/* The name is the h1, because this is a portfolio: the visitor is
+            here to find out whose it is. It is set in the display face rather
+            than blown up in the mono eyebrow, where fifteen characters at this
+            tracking would be wider than the window.
+
+            Every size below it is clamped with a smaller vw factor and smaller
+            bounds at both ends, so the name stays the largest thing on the
+            screen at every width rather than only at one. */}
+        <h1 className="font-serif text-[clamp(56px,6.6vw,104px)] font-light leading-[0.94] tracking-[-0.015em]">
+          {profile.name}
         </h1>
-        <p className="mt-8 max-w-[500px] font-serif text-[22px] text-[#bfb4ae]">{profile.role}</p>
-        <p className="absolute bottom-8 left-12 font-mono text-[10px] uppercase tracking-[0.3em] text-mute before:mr-3.5 before:inline-block before:h-px before:w-8 before:bg-rose before:align-middle">
-          Move the cursor
+        {/* Enough room that the descenders in "Upadhyay" clear this line: the
+            name is set at 0.94 leading, so its box ends above its own tails. */}
+        <div className="mt-7 font-mono text-[13.5px] uppercase tracking-[0.3em] text-rose">ML engineer</div>
+        {/* Held back until the lily has assembled. See the lily-gated rule in
+            globals.css: the flower's own progress drives it, so the statement
+            arrives as the last characters land rather than on a timer that
+            could disagree with what is on screen. */}
+        <p className="lily-gated mt-9 max-w-[900px] font-serif text-[clamp(34px,3.6vw,56px)] font-light leading-[1.04] tracking-[-0.01em]">
+          Signal from noise.
+        </p>
+        <p className="mt-6 max-w-[660px] font-serif text-[23px] text-[#bfb4ae]">{profile.role}</p>
+        {/* Centred on the bottom edge, and a scroll cue rather than a cursor
+            one: scrolling is what the whole page is built around, and it is
+            also the only one of the two that works on a touch screen. */}
+        <p className="absolute bottom-9 left-1/2 -translate-x-1/2 text-center font-mono text-[12px] uppercase tracking-[0.42em] text-mute after:mx-auto after:mt-3 after:block after:h-7 after:w-px after:bg-gradient-to-b after:from-rose after:to-transparent">
+          Scroll
         </p>
       </section>
 
@@ -106,22 +127,22 @@ export default function Home() {
             frame, so once the face has arrived it scrolls with the section. */}
         <div id="portrait-box" className="min-h-dvh" aria-hidden="true" />
         <div className="px-10 pt-24">
-          <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-rose">{about.index} &middot; Introduction</div>
-          <h2 className="mt-6 font-serif text-[63px] leading-none">
+          <div className="font-mono text-[12.5px] uppercase tracking-[0.3em] text-rose">{about.index} &middot; Introduction</div>
+          <h2 className="mt-6 font-serif text-[clamp(42px,4.6vw,74px)] leading-[1.02]">
             {about.headline[0]}
             <br />
-            <em>{about.headline[1]}</em>
+            {about.headline[1]}
           </h2>
           {about.body.map((p) => (
-            <p key={p} className="mt-4 max-w-[600px] text-[18.5px] leading-[1.6] text-[#a2958f]">{p}</p>
+            <p key={p} className="mt-4 max-w-[600px] text-[20px] leading-[1.6] text-[#a2958f]">{p}</p>
           ))}
-          <p className="mt-6 max-w-[600px] border-l border-rose pl-6 text-[18.5px] leading-[1.6] text-[#ded5ce]">{about.pull}</p>
-          <p className="mt-3 max-w-[600px] text-[14px] leading-[1.58] text-[#8d817c]">{about.throughLine}</p>
+          <p className="mt-6 max-w-[600px] border-l border-rose pl-6 text-[20px] leading-[1.6] text-[#ded5ce]">{about.pull}</p>
+          <p className="mt-3 max-w-[600px] text-[15.5px] leading-[1.58] text-[#a09490]">{about.throughLine}</p>
           <dl className="mt-7 flex flex-wrap gap-x-16 gap-y-6 border-t border-line pt-6">
             {[["Now", profile.now], ["Recently", profile.recently], ["Focus", profile.focus]].map(([k, v]) => (
               <div key={k}>
-                <dt className="font-mono text-[9.5px] uppercase tracking-[0.28em] text-mute">{k}</dt>
-                <dd className="mt-3 text-[16px] text-[#ded5ce]">{v}</dd>
+                <dt className="font-mono text-[12px] uppercase tracking-[0.28em] text-mute">{k}</dt>
+                <dd className="mt-3 text-[17.5px] text-[#ded5ce]">{v}</dd>
               </div>
             ))}
           </dl>
@@ -145,30 +166,25 @@ export default function Home() {
             {/* The text column is opaque and the figure column is not, so the
                 field shows through on the right and never behind the type. */}
             <div className="relative z-10 bg-bg px-12 pt-28">
-              <div className="font-mono text-[10px] uppercase tracking-[0.26em] text-rose">
-                {p.index} / 07 &middot; {p.org} &middot; {p.period}
-              </div>
-              <h2 className="mt-6 font-serif text-[52px] leading-[1.04]">
-                {p.headline[0]} <em>{p.headline[1]}</em>
-              </h2>
+              <SceneHead scene={p} />
               {p.body.map((t) => (
-                <p key={t} className="mt-4 text-[16.5px] leading-[1.58] text-[#a2958f]">{t}</p>
+                <p key={t} className="mt-4 text-[18px] leading-[1.58] text-[#a2958f]">{t}</p>
               ))}
-              <p className="mt-6 border-l border-rose pl-5 text-[16.5px] leading-[1.58] text-[#ded5ce]">{p.pull}</p>
+              <p className="mt-6 border-l border-rose pl-5 text-[18px] leading-[1.58] text-[#ded5ce]">{p.pull}</p>
               <dl className="mt-10 flex flex-wrap gap-x-9 gap-y-5 border-t border-line pt-6">
                 {p.metrics.map((m) => (
                   <div key={m.label}>
-                    <dd className={`font-serif text-[36px] leading-none ${m.accent ? "text-rose" : ""}`}>{m.value}</dd>
-                    <dt className="mt-2 font-mono text-[8.5px] uppercase tracking-[0.22em] text-mute">{m.label}</dt>
+                    <dd className={`font-serif text-[39px] leading-none ${m.accent ? "text-rose" : ""}`}>{m.value}</dd>
+                    <dt className="mt-2 font-mono text-[11px] uppercase tracking-[0.22em] text-mute">{m.label}</dt>
                   </div>
                 ))}
               </dl>
               <ul className="mt-7 flex flex-wrap gap-1.5">
                 {p.stack.map((s) => (
-                  <li key={s} className="border border-line px-2.5 py-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-[#8d817c]">{s}</li>
+                  <li key={s} className="border border-line px-2.5 py-1.5 font-mono text-[11.5px] uppercase tracking-[0.14em] text-[#a09490]">{s}</li>
                 ))}
               </ul>
-              {p.credit && <p className="mt-5 font-mono text-[8.5px] uppercase tracking-[0.2em] text-[#4a4042]">{p.credit}</p>}
+              {p.credit && <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.2em] text-[#6b5d60]">{p.credit}</p>}
             </div>
             <div data-entry-grid={p.entryGrid} aria-hidden="true">
               {/* Where the portrait's characters land. MorphField reads this box
@@ -183,27 +199,27 @@ export default function Home() {
         )}
       </div>
 
-      <section id="contact" className="relative z-10 min-h-dvh px-12 pt-32">
+      <section id="contact" className="relative z-10 min-h-dvh px-12 pb-28 pt-32">
         {/* Where the lily comes back. The bars on the last project page travel
             into it, so the site closes on the figure it opened with, at the
             same cell size and from the same grid. */}
         <div id="flower-box" className="absolute inset-y-0 right-0 w-[58%]" aria-hidden="true" />
-        <div className="font-mono text-[10px] uppercase tracking-[0.26em] text-rose">Contact</div>
-        <h2 className="mt-6 max-w-[900px] font-serif text-[58px] leading-[1.04]">
+        <div className="font-mono text-[12.5px] uppercase tracking-[0.26em] text-rose">Contact</div>
+        <h2 className="mt-6 max-w-[900px] font-serif text-[clamp(40px,4.4vw,68px)] leading-[1.04]">
           {contact.headline[0]}
           <br />
-          <em>{contact.headline[1]}</em>
+          {contact.headline[1]}
         </h2>
-        <p className="mt-6 max-w-[470px] text-[17px] leading-[1.6] text-[#a2958f]">{contact.lede}</p>
+        <p className="mt-6 max-w-[470px] text-[18.5px] leading-[1.6] text-[#a2958f]">{contact.lede}</p>
         <ul className="mt-10 max-w-[620px] border-t border-line">
           {links.map((l) => (
             <li key={l.label} className="border-b border-line">
               {/* `download` is undefined on every link but the résumé, and
                   React omits the attribute entirely when it is. */}
               <a href={l.href} download={l.download} className="group flex items-baseline gap-4 py-4 no-underline">
-                <span className="font-serif text-[33px] font-light text-[#cfc4be] group-hover:text-[#f4ece6]">{l.label}</span>
-                <span className="flex-1 font-mono text-[9px] tracking-[0.16em] text-transparent group-hover:text-[#8d817c]">{l.reveal}</span>
-                <span className="font-mono text-[13px] text-[#4a4042] group-hover:text-rose">&rarr;</span>
+                <span className="font-serif text-[36px] font-light text-[#cfc4be] group-hover:text-[#f4ece6]">{l.label}</span>
+                <span className="flex-1 font-mono text-[11.5px] tracking-[0.16em] text-transparent group-hover:text-[#a09490]">{l.reveal}</span>
+                <span className="font-mono text-[15px] text-[#6b5d60] group-hover:text-rose">&rarr;</span>
               </a>
             </li>
           ))}
@@ -211,16 +227,16 @@ export default function Home() {
         <dl className="mt-8 flex max-w-[620px] flex-wrap gap-x-14 gap-y-5">
           {[["Based in", profile.location], ["Available", profile.available], ["Status", profile.status.join(" · ")]].map(([k, v]) => (
             <div key={k}>
-              <dt className="font-mono text-[8.5px] uppercase tracking-[0.22em] text-[#4a4042]">{k}</dt>
-              <dd className="mt-2.5 text-[15px] leading-[1.5] text-[#c8bcb6]">{v}</dd>
+              <dt className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#6b5d60]">{k}</dt>
+              <dd className="mt-2.5 text-[16.5px] leading-[1.5] text-[#c8bcb6]">{v}</dd>
             </div>
           ))}
         </dl>
-        <footer className="absolute inset-x-12 bottom-6 flex justify-between border-t border-line pt-3.5 font-mono text-[8.5px] uppercase tracking-[0.2em] text-[#3b3335]">
+        <footer className="absolute inset-x-12 bottom-6 flex justify-between border-t border-line pt-3.5 font-mono text-[11px] uppercase tracking-[0.2em] text-[#57494c]">
           <span>&copy; 2026 {profile.name}</span>
           {/* A Link rather than a raw anchor, so the router adds both the
               subpath the site is served from and the trailing slash. */}
-          <Link href="/colophon" className="text-[#4a4042] hover:text-mute">Set in Cormorant and JetBrains Mono &middot; every figure drawn in characters</Link>
+          <Link href="/colophon" className="text-[#6b5d60] hover:text-mute">Set in Cormorant and JetBrains Mono &middot; every figure drawn in characters</Link>
           <span>Built in TypeScript</span>
         </footer>
       </section>

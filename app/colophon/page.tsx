@@ -14,25 +14,25 @@ const rows: [string, string][] = [
 
 export default function Colophon() {
   return (
-    <main className="grid min-h-dvh grid-cols-[520px_1fr] gap-24 px-12 pt-28">
+    <main className="grid min-h-dvh grid-cols-[minmax(0,520px)_minmax(0,1fr)] gap-24 px-12 pt-28">
       <div>
-        <div className="font-mono text-[10px] uppercase tracking-[0.26em] text-rose">Colophon</div>
-        <h1 className="mt-6 font-serif text-[54px] leading-[1.05]">
+        <div className="font-mono text-[12.5px] uppercase tracking-[0.26em] text-rose">Colophon</div>
+        <h1 className="mt-6 font-serif text-[clamp(40px,4vw,62px)] leading-[1.05]">
           Every figure on this site
           <br />
-          is <em>text.</em>
+          is text.
         </h1>
-        <p className="mt-6 max-w-[440px] text-[16.5px] leading-[1.6] text-[#a2958f]">
+        <p className="mt-6 max-w-[440px] text-[18px] leading-[1.6] text-[#a2958f]">
           No images were used for the flower, the portrait or any chart. The flower and the portrait are grids of the eleven characters below. The charts and graphs add the few marks they need to say what a point is. All of it renders to one canvas.
         </p>
-        <div className="mt-11 border-b border-line pb-2 font-mono text-[8.5px] uppercase tracking-[0.24em] text-[#4a4042]">The ramp &middot; darkest to brightest</div>
+        <div className="mt-11 border-b border-line pb-2 font-mono text-[11px] uppercase tracking-[0.24em] text-[#6b5d60]">The ramp &middot; darkest to brightest</div>
         <ol className="mt-4 flex gap-1.5">
           {RAMP.map((ch, i) => (
             <li key={i} className="flex w-[38px] flex-col items-center gap-2">
-              <span className="font-mono text-[22px] leading-none text-rose" style={{ opacity: 0.2 + 0.8 * (i / (RAMP.length - 1)) }}>
+              <span className="font-mono text-[25px] leading-none text-rose" style={{ opacity: 0.2 + 0.8 * (i / (RAMP.length - 1)) }}>
                 {ch === " " ? " " : ch}
               </span>
-              <span className="font-mono text-[7.5px] text-[#3f3638]">{String(i).padStart(2, "0")}</span>
+              <span className="font-mono text-[10px] text-[#5b4d50]">{String(i).padStart(2, "0")}</span>
             </li>
           ))}
         </ol>
@@ -40,11 +40,11 @@ export default function Colophon() {
       <dl>
         {rows.map(([k, v]) => (
           <div key={k} className="flex gap-5 border-b border-line py-4">
-            <dt className="w-[90px] pt-1 font-mono text-[8.5px] uppercase tracking-[0.2em] text-rose">{k}</dt>
-            <dd className="flex-1 text-[14.5px] leading-[1.58] text-[#9a8e8a]">{v}</dd>
+            <dt className="w-[90px] pt-1 font-mono text-[11px] uppercase tracking-[0.2em] text-rose">{k}</dt>
+            <dd className="flex-1 text-[16px] leading-[1.58] text-[#ab9f9b]">{v}</dd>
           </div>
         ))}
-        <a href="https://github.com/AnushaU1111" className="mt-6 inline-block border-b border-rose pb-1 font-mono text-[9px] uppercase tracking-[0.22em] text-[#c8bcb6]">
+        <a href="https://github.com/AnushaU1111" className="mt-6 inline-block border-b border-rose pb-1 font-mono text-[11.5px] uppercase tracking-[0.22em] text-[#c8bcb6]">
           View the repository &rarr;
         </a>
       </dl>

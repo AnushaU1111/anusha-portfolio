@@ -201,9 +201,18 @@ export const Scene = z.object({
   /** Two-digit scene number as shown in the eyebrow. */
   index: z.string().regex(/^\d{2}$/),
   slug: z.string().regex(/^[a-z0-9-]+$/),
+  /**
+   * The project's own name, which is the page's title. Distinct from `org`:
+   * the organisation is context in the eyebrow, not what the work is called.
+   */
+  name: z.string().min(1),
   org: z.string().min(1),
   period: z.string().min(1),
-  /** Rendered with the last segment in italic. */
+  /**
+   * The claim the project makes, in two segments so it can break where it was
+   * written to break. Shown as the subtitle under the project's name, set
+   * roman: it is a sentence to read, not a flourish.
+   */
   headline: z.tuple([z.string(), z.string()]),
   lede: z.string().min(1),
   body: z.array(z.string().min(1)).min(1),

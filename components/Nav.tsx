@@ -6,7 +6,7 @@ import { ContactDrawer } from "./ContactDrawer";
 export function Nav() {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
-  const item = "font-mono text-[10px] uppercase tracking-[0.28em] text-mute hover:text-ink";
+  const item = "font-mono text-[12.5px] uppercase tracking-[0.28em] text-mute hover:text-ink";
   return (
     <>
       <nav className="fixed right-12 top-6 z-30 flex gap-9" aria-label="Primary">
