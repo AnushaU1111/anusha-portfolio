@@ -1,4 +1,4 @@
-import { EDGES, NODES, type GraphSpec } from "./figures/graph";
+import { EDGES, NARROW_AT, NARROW_IDS, NODES, type GraphSpec } from "./figures/graph";
 
 /**
  * The ReqTrace dependency graph at the fine cell size, as somewhere for the
@@ -66,6 +66,13 @@ export interface GraphOptions {
   padBottom?: number;
   /** Half-width of the gap a label keeps clear, px per character of its id. */
   charW?: number;
+  /**
+   * Draw the eight-node subset on a taller reference instead of all nineteen.
+   * See NARROW_IDS: the whole instance cannot be labelled on a phone, and a
+   * subset that keeps one full path is more honest than nineteen ids printed
+   * on top of one another.
+   */
+  narrow?: boolean;
 }
 
 /** The bracket is the node type. Nothing else carries it, brightness least of all. */
@@ -104,7 +111,13 @@ export const buildAsciiGraph = (_spec: GraphSpec, o: GraphOptions): AsciiGraph =
   const top = padTop;
   const spanY = Math.max(1, height - padTop - padBottom);
 
-  const nodes: GraphNode[] = NODES.map((n) => {
+  const narrow = o.narrow ?? false;
+  const shown = narrow ? NODES.filter((n) => (NARROW_IDS as readonly string[]).includes(n.id)) : NODES;
+  const refCols = narrow ? 100 : REF_COLS;
+  const refRows = narrow ? 100 : REF_ROWS;
+  const refAt = (n: { id: string; col: number; row: number }) => (narrow ? NARROW_AT[n.id] ?? n : n);
+
+  const nodes: GraphNode[] = shown.map((n) => {
     const kind = (n.id[0] ?? "R") as NodeKind;
     const [open, close] = BRACKETS[kind];
     return {
@@ -112,15 +125,17 @@ export const buildAsciiGraph = (_spec: GraphSpec, o: GraphOptions): AsciiGraph =
       kind,
       label: `${open}${n.id}${close}`,
       title: n.title,
-      x: left + (n.col / REF_COLS) * spanX,
-      y: top + (n.row / REF_ROWS) * spanY,
+      x: left + (refAt(n).col / refCols) * spanX,
+      y: top + (refAt(n).row / refRows) * spanY,
     };
   });
   const at = new Map(nodes.map((n) => [n.id, n]));
 
   const marks: GraphMark[] = [];
   const edges: GraphEdge[] = [];
+  const drawn = new Set(nodes.map((n) => n.id));
   for (const [from, to, kind] of EDGES) {
+    if (!drawn.has(from) || !drawn.has(to)) continue;
     const a = at.get(from);
     const b = at.get(to);
     if (!a || !b) continue;

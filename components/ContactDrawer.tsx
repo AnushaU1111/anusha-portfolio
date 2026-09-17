@@ -93,10 +93,10 @@ export function ContactDrawer({ open, onClose, returnFocusTo }: Props) {
         <ul className="mt-8 border-t border-line">
           {links.map((l) => (
             <li key={l.label} className="border-b border-line">
-              <a href={l.href} download={l.download} className="group flex items-baseline gap-3 py-3.5 no-underline">
+              <a href={l.href} download={l.download} className="group flex items-baseline gap-3 py-3.5 no-underline max-md:flex-wrap max-md:gap-y-1.5">
                 <span className="font-serif text-[23px] font-light text-[#cfc4be] group-hover:text-[#f4ece6]">{l.label}</span>
-                <span className="flex-1 font-mono text-[10.5px] tracking-[0.12em] text-transparent group-hover:text-mute">{l.reveal}</span>
-                <span className="font-mono text-[13.5px] text-[#6b5d60] group-hover:text-rose">&rarr;</span>
+                <span className="flex-1 font-mono text-[10.5px] tracking-[0.12em] text-transparent group-hover:text-mute max-md:order-3 max-md:w-full max-md:flex-none max-md:text-[11px] max-md:text-[#928587]">{l.reveal}</span>
+                <span className="font-mono text-[13.5px] text-[#6b5d60] group-hover:text-rose max-md:ml-auto">&rarr;</span>
               </a>
             </li>
           ))}

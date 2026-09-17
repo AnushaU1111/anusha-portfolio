@@ -38,7 +38,7 @@ function Entry({ m, className = "" }: { m: Milestone; className?: string }) {
 
 export function Timeline({ items }: { items: Milestone[] }) {
   return (
-    <div className="px-12">
+    <div className="px-12 max-md:px-5">
       <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2 border-b border-line pb-3 font-mono text-[11.5px] uppercase tracking-[0.2em] text-[#8b8083]">
         <span>Timeline</span>
         <span className="text-[#7c6e71]">Newest first &middot; study, work and coursework in one line</span>

@@ -89,7 +89,7 @@ export default function Home() {
       />
       {/* Bottom padding clears the centred scroll cue, which is absolutely
           positioned and so cannot push the copy up itself. */}
-      <section id="top" className="relative z-10 flex min-h-dvh flex-col justify-end px-12 pb-36">
+      <section id="top" className="relative z-10 flex min-h-dvh flex-col justify-end px-12 max-md:px-5 pb-36">
         {/* The name is the h1, because this is a portfolio: the visitor is
             here to find out whose it is. It is set in the display face rather
             than blown up in the mono eyebrow, where fifteen characters at this
@@ -124,11 +124,11 @@ export default function Home() {
           the fixed first column plus the copy's own min-content width is wider
           than a narrow laptop window and the page scrolls sideways. */}
       <section id="about" className="relative z-10 pb-28">
-        <div className="grid min-h-dvh grid-cols-[minmax(0,660px)_minmax(380px,1fr)]">
+        <div className="grid min-h-dvh grid-cols-[minmax(0,660px)_minmax(380px,1fr)] max-md:min-h-0 max-md:grid-cols-1">
           {/* Where the flower's characters land. MorphField reads this box every
               frame, so once the face has arrived it scrolls with the section. */}
-          <div id="portrait-box" className="min-h-dvh" aria-hidden="true" />
-          <div className="px-10 pt-24">
+          <div id="portrait-box" className="min-h-dvh max-md:h-[58svh] max-md:min-h-0" aria-hidden="true" />
+          <div className="px-10 max-md:px-5 pt-24 max-md:pt-16">
             <div className="font-mono text-[12.5px] uppercase tracking-[0.3em] text-rose">{about.index} &middot; Introduction</div>
             <h2 className="mt-6 font-serif text-[clamp(42px,4.6vw,74px)] leading-[1.02]">
               {about.headline[0]}
@@ -228,18 +228,18 @@ export default function Home() {
           <section
             key={p.slug}
             id={p.slug}
-            className="relative z-10 min-h-dvh [@media(min-height:1020px)]:h-[175dvh]"
+            className="relative z-10 min-h-dvh max-md:min-h-0 [@media(min-height:1020px)]:h-[175dvh]"
           >
             {/* Exactly a viewport tall only while it is stuck. Below the
                 threshold it keeps a minimum instead, so a copy column taller
                 than the window lengthens the row rather than being cut off by
                 it. */}
-            <div className="grid min-h-dvh grid-cols-[minmax(0,498px)_minmax(0,1fr)] [@media(min-height:1020px)]:sticky [@media(min-height:1020px)]:top-0 [@media(min-height:1020px)]:h-dvh">
+            <div className="grid min-h-dvh grid-cols-[minmax(0,498px)_minmax(0,1fr)] max-md:min-h-0 max-md:grid-cols-1 [@media(min-height:1020px)]:sticky [@media(min-height:1020px)]:top-0 [@media(min-height:1020px)]:h-dvh">
             {/* The text column is opaque and the figure column is not, so the
                 field shows through on the right and never behind the type.
                 Clipped only while stuck, where the row is one viewport and the
                 copy is known to fit inside it. */}
-            <div className="relative z-10 bg-bg px-12 pt-24 [@media(min-height:1020px)]:overflow-hidden">
+            <div className="relative z-10 bg-bg px-12 max-md:px-5 pt-24 max-md:pt-16 max-md:overflow-visible [@media(min-height:1020px)]:overflow-hidden">
               <SceneHead scene={p} />
               {p.body.map((t) => (
                 <p key={t} className="mt-4 text-[18px] leading-[1.58] text-[#a2958f]">{t}</p>
@@ -268,8 +268,8 @@ export default function Home() {
                   labels and its hint against the bottom of this box, and at the
                   exact viewport height they end a few pixels off the screen
                   edge, where any browser furniture covers them. */}
-              {p.slug === "neuraluna" && <div id="chart-box" className="h-[calc(100dvh-34px)] w-full" />}
-              {p.slug === "reqtrace" && <div id="graph-box" className="h-[calc(100dvh-34px)] w-full" />}
+              {p.slug === "neuraluna" && <div id="chart-box" className="h-[calc(100dvh-34px)] w-full max-md:h-[56svh]" />}
+              {p.slug === "reqtrace" && <div id="graph-box" className="h-[calc(100dvh-34px)] w-full max-md:h-[56svh]" />}
             </div>
             </div>
           </section>
@@ -277,11 +277,11 @@ export default function Home() {
         )}
       </div>
 
-      <section id="contact" className="relative z-10 min-h-dvh px-12 pb-28 pt-32">
+      <section id="contact" className="relative z-10 min-h-dvh px-12 max-md:px-5 pb-28 pt-32">
         {/* Where the lily comes back. The bars on the last project page travel
             into it, so the site closes on the figure it opened with, at the
             same cell size and from the same grid. */}
-        <div id="flower-box" className="absolute inset-y-0 right-0 w-[58%]" aria-hidden="true" />
+        <div id="flower-box" className="absolute inset-y-0 right-0 w-[58%] max-md:inset-x-0 max-md:top-auto max-md:h-[52svh] max-md:w-full" aria-hidden="true" />
         <div className="font-mono text-[12.5px] uppercase tracking-[0.26em] text-rose">Contact</div>
         <h2 className="mt-6 max-w-[900px] font-serif text-[clamp(40px,4.4vw,68px)] leading-[1.04]">
           {contact.headline[0]}
@@ -294,10 +294,10 @@ export default function Home() {
             <li key={l.label} className="border-b border-line">
               {/* `download` is undefined on every link but the résumé, and
                   React omits the attribute entirely when it is. */}
-              <a href={l.href} download={l.download} className="group flex items-baseline gap-4 py-4 no-underline">
-                <span className="font-serif text-[36px] font-light text-[#cfc4be] group-hover:text-[#f4ece6]">{l.label}</span>
-                <span className="flex-1 font-mono text-[11.5px] tracking-[0.16em] text-transparent group-hover:text-[#a09490]">{l.reveal}</span>
-                <span className="font-mono text-[15px] text-[#6b5d60] group-hover:text-rose">&rarr;</span>
+              <a href={l.href} download={l.download} className="group flex items-baseline gap-4 py-4 no-underline max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-1.5">
+                <span className="font-serif text-[36px] font-light text-[#cfc4be] group-hover:text-[#f4ece6] max-md:text-[30px]">{l.label}</span>
+                <span className="flex-1 font-mono text-[11.5px] tracking-[0.16em] text-transparent group-hover:text-[#a09490] max-md:order-3 max-md:w-full max-md:flex-none max-md:tracking-[0.08em] max-md:text-[#928587]">{l.reveal}</span>
+                <span className="font-mono text-[15px] text-[#6b5d60] group-hover:text-rose max-md:ml-auto">&rarr;</span>
               </a>
             </li>
           ))}

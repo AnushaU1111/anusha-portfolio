@@ -40,13 +40,13 @@ function Block({
 }) {
   return (
     <section className="mt-9 first:mt-0">
-      <header className="flex items-baseline gap-3 overflow-hidden border-b border-line pb-2 font-mono text-[12px] uppercase tracking-[0.2em] text-[#8b8083]">
+      <header className="flex items-baseline gap-3 overflow-hidden border-b border-line pb-2 font-mono text-[12px] uppercase tracking-[0.2em] text-[#8b8083] max-md:flex-wrap max-md:gap-x-2 max-md:overflow-visible">
         <span className="whitespace-nowrap">Fig. {fig}</span>
         <span className="text-[#6b5d60]">&middot;</span>
         <span className="whitespace-nowrap text-[#ded5ce]">{title}</span>
         <span className="text-[#6b5d60]">/</span>
-        <span className="truncate">{sub}</span>
-        <span className="ml-auto whitespace-nowrap text-[#7c6e71]">{aside}</span>
+        <span className="truncate max-md:whitespace-normal">{sub}</span>
+        <span className="ml-auto whitespace-nowrap text-[#7c6e71] max-md:ml-0 max-md:w-full max-md:whitespace-normal">{aside}</span>
       </header>
       {children}
     </section>
@@ -60,17 +60,17 @@ export function TempleSection({ scene, detail }: { scene: Scene; detail: SceneDe
     <section id={scene.slug} className="relative z-10">
       {/* The diagram's own hold. One viewport of it is sticky, and the rest of
           this block is the scroll spent looking at it. */}
-      <div className="h-[170dvh]">
-        <div className="sticky top-0 h-dvh">
-          <div className="absolute left-12 top-[9dvh] max-w-[760px]">
+      <div className="h-[170dvh] max-md:h-auto">
+        <div className="sticky top-0 h-dvh max-md:static max-md:h-auto max-md:pb-8 max-md:pt-16">
+          <div className="absolute left-12 top-[9dvh] max-w-[760px] max-md:static max-md:max-w-none max-md:px-5">
             <SceneHead scene={scene} />
             <p className="mt-5 max-w-[520px] text-[17.5px] leading-[1.6] text-[#a2958f]">{scene.lede}</p>
           </div>
           {/* Where the chart's characters land. MorphField reads this box every
               frame; the diagram's own top and bottom padding keep it clear of
               the headline above it. */}
-          <div id="pipe-box" className="absolute inset-0" aria-hidden="true" />
-          <div className="absolute bottom-8 right-12 text-right font-mono text-[12px] uppercase leading-[1.8] tracking-[0.2em] text-[#7c6e71]">
+          <div id="pipe-box" className="absolute inset-0 max-md:static max-md:mt-8 max-md:h-[52svh]" aria-hidden="true" />
+          <div className="absolute bottom-8 right-12 text-right font-mono text-[12px] uppercase leading-[1.8] tracking-[0.2em] text-[#7c6e71] max-md:static max-md:mt-6 max-md:px-5 max-md:text-left">
             <div>
               Fig. {scene.index}A <span className="text-[#6b5d60]">&middot;</span> request path
             </div>
@@ -87,7 +87,7 @@ export function TempleSection({ scene, detail }: { scene: Scene; detail: SceneDe
         {/* The copy column gives way before the figure blocks do: they carry
             fixed-width bars and cannot usefully shrink, so below a laptop
             width the panel becomes one column and reads down instead. */}
-        <div className="grid min-h-dvh grid-cols-1 gap-x-10 gap-y-14 px-12 pb-24 pt-20 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,470px)_minmax(0,1fr)]">
+        <div className="grid min-h-dvh grid-cols-1 gap-x-10 gap-y-14 px-12 max-md:px-5 pb-24 pt-20 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,470px)_minmax(0,1fr)]">
           <div>
             {/* The results state restates the header, because it arrives as
                 its own screen and the entry state has scrolled away by then. */}

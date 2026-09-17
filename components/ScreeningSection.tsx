@@ -24,13 +24,13 @@ const signed = (v: number, places = 1) => `${v >= 0 ? "+" : "−"}${Math.abs(v).
 
 function Head({ fig, title, sub, aside }: { fig: string; title: string; sub: string; aside: string }) {
   return (
-    <header className="flex items-baseline gap-3 overflow-hidden border-b border-line pb-2 font-mono text-[12px] uppercase tracking-[0.2em] text-[#8b8083]">
+    <header className="flex items-baseline gap-3 overflow-hidden border-b border-line pb-2 font-mono text-[12px] uppercase tracking-[0.2em] text-[#8b8083] max-md:flex-wrap max-md:gap-x-2 max-md:overflow-visible">
       <span className="whitespace-nowrap">Fig. {fig}</span>
       <span className="text-[#6b5d60]">&middot;</span>
       <span className="whitespace-nowrap text-[#ded5ce]">{title}</span>
       <span className="text-[#6b5d60]">/</span>
-      <span className="truncate">{sub}</span>
-      <span className="ml-auto whitespace-nowrap text-[#7c6e71]">{aside}</span>
+      <span className="truncate max-md:whitespace-normal">{sub}</span>
+      <span className="ml-auto whitespace-nowrap text-[#7c6e71] max-md:ml-0 max-md:w-full max-md:whitespace-normal">{aside}</span>
     </header>
   );
 }
@@ -49,7 +49,7 @@ export function ScreeningSection({ scene, figure }: { scene: Scene; figure: Cont
   return (
     <section id={scene.slug} className="relative z-10">
       <div className="grid min-h-dvh grid-cols-1 gap-x-10 gap-y-14 pb-24 pt-24 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,470px)_minmax(0,1fr)]">
-        <div className="relative z-10 bg-bg px-12">
+        <div className="relative z-10 bg-bg px-12 max-md:px-5">
           <SceneHead scene={scene} />
           <p className="mt-6 max-w-[640px] text-[18.5px] leading-[1.6] text-[#bfb4ae]">{scene.lede}</p>
           {scene.body.map((t) => (
@@ -78,7 +78,7 @@ export function ScreeningSection({ scene, figure }: { scene: Scene; figure: Cont
           )}
         </div>
 
-        <div className="px-12 pt-1 lg:pl-0">
+        <div className="px-12 max-md:px-5 pt-1 lg:pl-0">
           <section>
             <Head
               fig={`${scene.index}A`}
@@ -100,10 +100,10 @@ export function ScreeningSection({ scene, figure }: { scene: Scene; figure: Cont
               aside={`n = ${m.total.toLocaleString()} test images`}
             />
             <div className="mt-5 overflow-x-auto">
-              <table className="w-full min-w-[420px] font-mono text-[13.5px]">
+              <table className="w-full min-w-[420px] font-mono text-[13.5px] max-md:min-w-[356px] max-md:text-[12px]">
                 <thead>
                   <tr className="text-[11.5px] uppercase tracking-[0.18em] text-[#7c6e71]">
-                    <th className="w-28 pb-3 text-left font-normal" />
+                    <th className="w-28 pb-3 text-left font-normal max-md:w-[78px]" />
                     <th className="pb-3 text-right font-normal">Pred. benign</th>
                     <th className="pb-3 text-right font-normal">Pred. malignant</th>
                     <th className="pb-3 text-right font-normal">Actual</th>

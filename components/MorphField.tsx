@@ -53,6 +53,15 @@ const CARD_H = 82;
 const GRAPH_LIVE = 0.9;
 /** How far the rest of the graph recedes while one node is selected. */
 const GRAPH_DIM = 0.2;
+/**
+ * Below this the figures are laid out for a narrow box: the pipeline runs down
+ * instead of across, the dependency graph draws its eight-node subset, and the
+ * bar names sit above their bars. Same number as Tailwind's `md`, which every
+ * `max-md:` rule in the layout is keyed to, so the canvas and the DOM agree
+ * about where the phone form starts.
+ */
+const NARROW_AT_PX = 768;
+const isNarrow = () => window.innerWidth < NARROW_AT_PX;
 
 interface Props {
   flowerSrc: string;
@@ -305,7 +314,7 @@ export function MorphField({
         b.toPipe = null;
         return;
       }
-      const p = buildPipe(pipeSpec, { width, height, cellW: CELL_W, cellH: CELL_H });
+      const p = buildPipe(pipeSpec, { width, height, cellW: CELL_W, cellH: CELL_H, vertical: isNarrow() });
       b.pipe = p;
       b.toPipe = buildRelay(plain(b.chart.marks), plain(p.marks), {
         cellW: CELL_W,
@@ -330,7 +339,7 @@ export function MorphField({
         b.toGraph = null;
         return;
       }
-      const g = buildAsciiGraph(graphSpec, { width, height, cellW: CELL_W, cellH: CELL_H });
+      const g = buildAsciiGraph(graphSpec, { width, height, cellW: CELL_W, cellH: CELL_H, narrow: isNarrow() });
       b.graph = g;
       b.toGraph = buildRelay(plain(b.pipe.marks), plain(g.marks), {
         cellW: CELL_W,
@@ -406,7 +415,7 @@ export function MorphField({
         b.toBars = null;
         return;
       }
-      const c = buildBars(barSpec, { width, height, cellW: CELL_W, cellH: CELL_H });
+      const c = buildBars(barSpec, { width, height, cellW: CELL_W, cellH: CELL_H, stacked: isNarrow() });
       b.bars = c;
       b.toBars = buildRelay(plain(b.wave.marks), plain(c.marks), {
         cellW: CELL_W,
@@ -982,7 +991,7 @@ function PipeChrome({ pipe }: { pipe: Pipe }) {
       {pipe.nodes.map((n) => (
         <span
           key={`${n.kind}-${n.label}`}
-          className={`absolute whitespace-nowrap text-[15px] tracking-[0.06em] ${NODE_CLASS[n.kind]}`}
+          className={`absolute whitespace-nowrap text-[15px] max-md:text-[12px] tracking-[0.06em] ${NODE_CLASS[n.kind]}`}
           style={{
             left: n.x,
             top: n.y,
@@ -1048,7 +1057,7 @@ function Chrome({ chart, hover }: { chart: ParetoChart; hover: number }) {
           corner nothing can occupy, and above the plot it would run into the
           site's nav on a narrow window. */}
       <div
-        className="absolute flex gap-6 whitespace-nowrap text-[12.5px] uppercase tracking-[0.2em] text-[#ab9f9b]"
+        className="absolute flex gap-6 whitespace-nowrap text-[12.5px] uppercase tracking-[0.2em] text-[#ab9f9b] max-md:flex-col max-md:gap-1 max-md:text-[11px] max-md:tracking-[0.12em]"
         style={{ left: plot.left + 16, top: plot.top + 14 }}
       >
         <span className="text-rose">&#9679; frontier</span>
@@ -1065,7 +1074,7 @@ function Chrome({ chart, hover }: { chart: ParetoChart; hover: number }) {
           own line, at the far end of it. */}
       {hover < 0 && (
         <span
-          className="absolute -translate-x-full whitespace-nowrap text-[12.5px] uppercase tracking-[0.24em] text-[#928587] before:mr-3 before:inline-block before:h-px before:w-8 before:bg-rose before:align-middle"
+          className="absolute -translate-x-full whitespace-nowrap text-[12.5px] uppercase tracking-[0.24em] text-[#928587] before:mr-3 before:inline-block before:h-px before:w-8 before:bg-rose before:align-middle [@media(hover:none)]:hidden"
           style={{ left: plot.left + plot.width - 8, top: plot.top + plot.height + 30 }}
         >
           Point at a model
@@ -1267,7 +1276,7 @@ function GraphChrome({
         <span>&middot;&middot;&middot; owns</span>
         <span>&mdash; depends</span>
         <span>::: validates</span>
-        {!node && <span className="ml-auto pr-2 text-[#7c6e71]">Point at a node</span>}
+        {!node && <span className="ml-auto pr-2 text-[#7c6e71] [@media(hover:none)]:hidden">Point at a node</span>}
       </div>
 
       {node && near && <GraphCard node={node} near={near} line={line} graph={graph} />}
@@ -1392,19 +1401,29 @@ function BarChrome({ chart }: { chart: BarChart }) {
     <div className="absolute inset-0 font-mono">
       {chart.rows.map((r) => (
         <span key={r.label}>
+          {/* Stacked: the name on its own line above the bar, the score
+              right-aligned on that same line, so neither can reach the bar. */}
           <span
-            className={`absolute -translate-y-1/2 whitespace-nowrap text-right text-[12.5px] uppercase tracking-[0.16em] ${
-              r.best ? "text-rose" : "text-[#bfb4ae]"
-            }`}
-            style={{ right: chart.width - r.x0 + 14, top: r.y, width: Math.max(90, r.x0 - 20) }}
+            className={`absolute whitespace-nowrap text-[12.5px] uppercase tracking-[0.16em] ${
+              chart.stacked ? "" : "-translate-y-1/2 text-right"
+            } ${r.best ? "text-rose" : "text-[#bfb4ae]"}`}
+            style={
+              chart.stacked
+                ? { left: r.x0, top: r.y - 26 }
+                : { right: chart.width - r.x0 + 14, top: r.y, width: Math.max(90, r.x0 - 20) }
+            }
           >
             {r.label}
           </span>
           <span
-            className={`absolute -translate-y-1/2 whitespace-nowrap text-[13.5px] tracking-[0.06em] ${
-              r.best ? "text-[#f4ece6]" : "text-[#ded5ce]"
-            }`}
-            style={{ left: chart.valueX + 14, top: r.y }}
+            className={`absolute whitespace-nowrap text-[13.5px] tracking-[0.06em] ${
+              chart.stacked ? "text-right" : "-translate-y-1/2"
+            } ${r.best ? "text-[#f4ece6]" : "text-[#ded5ce]"}`}
+            style={
+              chart.stacked
+                ? { right: 2, top: r.y - 26 }
+                : { left: chart.valueX + 14, top: r.y }
+            }
           >
             {r.value.toFixed(3)}
           </span>

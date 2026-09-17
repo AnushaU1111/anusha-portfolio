@@ -59,6 +59,32 @@ export const NODES: { id: string; col: number; row: number; title: string }[] = 
   { id: "T-04", col: 92, row: 14, title: "Anchor resolves to the right utterance" },
 ];
 
+/**
+ * The eight nodes the narrow form draws, and where it puts them.
+ *
+ * Nineteen labels cannot share a phone's width at any readable size: each is
+ * about sixty pixels, so four fit across. This subset keeps one whole path
+ * through the graph — a stakeholder owns a requirement, that requirement rests
+ * on a second which rests on a third — and hangs the features and tests that
+ * touch it off the side. Every edge between these eight is a real edge from
+ * the list below, so the narrow form states nothing the wide one does not.
+ *
+ * Positions are on a 100 by 100 reference rather than the wide form's 100 by
+ * 40, because the box it lands in is taller than it is wide.
+ */
+export const NARROW_IDS = ["S-02", "R-03", "R-05", "R-07", "F-02", "F-04", "T-02", "T-03"] as const;
+
+export const NARROW_AT: Record<string, { col: number; row: number }> = {
+  "S-02": { col: 16, row: 10 },
+  "R-03": { col: 48, row: 27 },
+  "F-02": { col: 82, row: 12 },
+  "T-02": { col: 84, row: 43 },
+  "R-05": { col: 38, row: 58 },
+  "F-04": { col: 76, row: 68 },
+  "T-03": { col: 80, row: 90 },
+  "R-07": { col: 32, row: 88 },
+};
+
 export const EDGES: [string, string, EdgeKind][] = [
   ["S-01", "R-01", "owns"],
   ["S-01", "R-02", "owns"],

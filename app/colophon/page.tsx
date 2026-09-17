@@ -14,7 +14,7 @@ const rows: [string, string][] = [
 
 export default function Colophon() {
   return (
-    <main className="grid min-h-dvh grid-cols-[minmax(0,520px)_minmax(0,1fr)] gap-24 px-12 pt-28">
+    <main className="grid min-h-dvh grid-cols-[minmax(0,520px)_minmax(0,1fr)] gap-24 px-12 max-md:px-5 pt-28">
       <div>
         <div className="font-mono text-[12.5px] uppercase tracking-[0.26em] text-rose">Colophon</div>
         <h1 className="mt-6 font-serif text-[clamp(40px,4vw,62px)] leading-[1.05]">

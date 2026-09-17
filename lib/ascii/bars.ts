@@ -39,6 +39,8 @@ export interface BarRow {
 export interface BarChart {
   marks: BarMark[];
   rows: BarRow[];
+  /** Whether the names sit above the bars; the chrome positions them to match. */
+  stacked: boolean;
   width: number;
   height: number;
   /** The scale the runs are drawn over, so the caption can print it. */
@@ -61,6 +63,16 @@ export interface BarOptions {
   /** Cells across the stroke of a run, and cells between marks along it. */
   thick?: number;
   step?: number;
+  /**
+   * Put each stage's name above its bar instead of in a gutter beside it.
+   *
+   * The gutter is derived from the longest name, which at a laptop width is
+   * about two hundred and sixty pixels. On a phone that is most of the box, so
+   * the gutter gets capped and the names then print straight through their own
+   * bars. Stacking gives the name the full width and the bar the full width,
+   * one under the other, and nothing collides at any size.
+   */
+  stacked?: boolean;
 }
 
 export const buildBars = (spec: ContactSheetSpec, o: BarOptions): BarChart => {
@@ -70,7 +82,9 @@ export const buildBars = (spec: ContactSheetSpec, o: BarOptions): BarChart => {
   // those labels were 10px; at a legible size the longest one runs into its
   // own bar. Derived, and capped so a very long name cannot eat the plot.
   const longest = spec.stages.reduce((n, k) => Math.max(n, k.label.length), 0);
-  const padLeft = o.padLeft ?? Math.min(width * 0.36, 30 + longest * 9.8);
+  const stacked = o.stacked ?? false;
+  // Stacked needs no gutter at all: the name has its own line above the bar.
+  const padLeft = o.padLeft ?? (stacked ? 2 : Math.min(width * 0.36, 30 + longest * 9.8));
   const padRight = o.padRight ?? 76;
   const padTop = o.padTop ?? 16;
   const padBottom = o.padBottom ?? 16;
@@ -100,7 +114,7 @@ export const buildBars = (spec: ContactSheetSpec, o: BarOptions): BarChart => {
     const stage = spec.stages[i];
     if (!stage) continue;
     const u = Math.min(1, Math.max(0, (stage.rocAuc - lo) / span));
-    const y = top + pitch * (i + 0.5);
+    const y = top + pitch * (i + (stacked ? 0.78 : 0.5));
     const x1 = x0 + u * full;
     const isBest = stage.rocAuc >= best;
     rows.push({ label: stage.label, value: stage.rocAuc, y, x0, x1, best: isBest });
@@ -128,7 +142,7 @@ export const buildBars = (spec: ContactSheetSpec, o: BarOptions): BarChart => {
     }
   }
 
-  return { marks, rows, width, height, lo, hi, valueX: x0 + full };
+  return { marks, rows, stacked, width, height, lo, hi, valueX: x0 + full };
 };
 
 /**
