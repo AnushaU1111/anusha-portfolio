@@ -11,6 +11,7 @@ import { ScreeningSection } from "@/components/ScreeningSection";
 import { CorpusSection } from "@/components/CorpusSection";
 import { TempleSection } from "@/components/TempleSection";
 import { SceneHead } from "@/components/SceneHead";
+import { Timeline } from "@/components/Timeline";
 
 /**
  * Phase 01 scaffold. Sections render their content from the model so the
@@ -122,31 +123,45 @@ export default function Home() {
       {/* Both grids give their columns a zero floor and the copy a minimum, or
           the fixed first column plus the copy's own min-content width is wider
           than a narrow laptop window and the page scrolls sideways. */}
-      <section id="about" className="relative z-10 grid min-h-dvh grid-cols-[minmax(0,660px)_minmax(380px,1fr)]">
-        {/* Where the flower's characters land. MorphField reads this box every
-            frame, so once the face has arrived it scrolls with the section. */}
-        <div id="portrait-box" className="min-h-dvh" aria-hidden="true" />
-        <div className="px-10 pt-24">
-          <div className="font-mono text-[12.5px] uppercase tracking-[0.3em] text-rose">{about.index} &middot; Introduction</div>
-          <h2 className="mt-6 font-serif text-[clamp(42px,4.6vw,74px)] leading-[1.02]">
-            {about.headline[0]}
-            <br />
-            {about.headline[1]}
-          </h2>
-          {about.body.map((p) => (
-            <p key={p} className="mt-4 max-w-[600px] text-[20px] leading-[1.6] text-[#a2958f]">{p}</p>
-          ))}
-          <p className="mt-6 max-w-[600px] border-l border-rose pl-6 text-[20px] leading-[1.6] text-[#ded5ce]">{about.pull}</p>
-          <p className="mt-3 max-w-[600px] text-[15.5px] leading-[1.58] text-[#a09490]">{about.throughLine}</p>
-          <dl className="mt-7 flex flex-wrap gap-x-16 gap-y-6 border-t border-line pt-6">
-            {[["Now", profile.now], ["Recently", profile.recently], ["Focus", profile.focus]].map(([k, v]) => (
-              <div key={k}>
-                <dt className="font-mono text-[12px] uppercase tracking-[0.28em] text-mute">{k}</dt>
-                <dd className="mt-3 text-[17.5px] text-[#ded5ce]">{v}</dd>
+      <section id="about" className="relative z-10 pb-28">
+        <div className="grid min-h-dvh grid-cols-[minmax(0,660px)_minmax(380px,1fr)]">
+          {/* Where the flower's characters land. MorphField reads this box every
+              frame, so once the face has arrived it scrolls with the section. */}
+          <div id="portrait-box" className="min-h-dvh" aria-hidden="true" />
+          <div className="px-10 pt-24">
+            <div className="font-mono text-[12.5px] uppercase tracking-[0.3em] text-rose">{about.index} &middot; Introduction</div>
+            <h2 className="mt-6 font-serif text-[clamp(42px,4.6vw,74px)] leading-[1.02]">
+              {about.headline[0]}
+              <br />
+              {about.headline[1]}
+            </h2>
+            {/* Two columns once there is room, rather than one column of the
+                same text with half the width left empty beside it. Widening a
+                single measure to fill this column would put a line past a
+                hundred and thirty characters; two columns fill it at about
+                seventy each, which is inside the comfortable range. */}
+            <div className="mt-6 grid gap-x-14 gap-y-5 2xl:grid-cols-2">
+              {about.body.map((p) => (
+                <p key={p} className="max-w-[640px] text-[20px] leading-[1.6] text-[#a2958f] 2xl:max-w-none">{p}</p>
+              ))}
+            </div>
+            <div className="mt-9 grid gap-x-14 gap-y-7 2xl:grid-cols-2">
+              <p className="max-w-[640px] border-l border-rose pl-6 text-[20px] leading-[1.6] text-[#ded5ce] 2xl:max-w-none">{about.pull}</p>
+              <div>
+                <p className="max-w-[640px] text-[15.5px] leading-[1.58] text-[#a09490] 2xl:max-w-none">{about.throughLine}</p>
+                {/* One restrained line rather than a sentence inside the
+                    argument above it, which is where this sat before and
+                    where it read as padding. */}
+                <p className="mt-7 font-mono text-[11.5px] uppercase tracking-[0.18em] text-[#928587]">
+                  Away from the screen <span className="text-[#5b4d50]">&middot;</span> {about.interests.join(", ")}
+                </p>
               </div>
-            ))}
-          </dl>
+            </div>
+          </div>
         </div>
+        {/* Outside the two-column grid, so the timeline runs the width of the
+            page rather than the width of the copy column. */}
+        <Timeline items={about.timeline} />
       </section>
 
       <div id="work">
@@ -162,10 +177,32 @@ export default function Home() {
           ) : p.figure.kind === "contactSheet" ? (
             <ScreeningSection key={p.slug} scene={p} figure={p.figure} />
           ) : (
-          <section key={p.slug} id={p.slug} className="relative z-10 grid min-h-dvh grid-cols-[minmax(0,498px)_minmax(0,1fr)]">
+          /* A tall track holding one sticky viewport, so the copy and the
+             figure hold together while the page keeps scrolling. That gives
+             the figure a dwell long enough to point at without a ScrollTrigger
+             pin, which used to stop the page outright and, worse, froze the
+             box position the figure reads its own arrival from.
+
+             Both the track's extra height and the stickiness are conditional
+             on the window being tall enough to show the whole copy column,
+             which measures about 970px. Below that the section is a single
+             viewport and scrolls normally: a dwell would either clip the end
+             of the copy or leave the column empty underneath it. */
+          <section
+            key={p.slug}
+            id={p.slug}
+            className="relative z-10 min-h-dvh [@media(min-height:1020px)]:h-[175dvh]"
+          >
+            {/* Exactly a viewport tall only while it is stuck. Below the
+                threshold it keeps a minimum instead, so a copy column taller
+                than the window lengthens the row rather than being cut off by
+                it. */}
+            <div className="grid min-h-dvh grid-cols-[minmax(0,498px)_minmax(0,1fr)] [@media(min-height:1020px)]:sticky [@media(min-height:1020px)]:top-0 [@media(min-height:1020px)]:h-dvh">
             {/* The text column is opaque and the figure column is not, so the
-                field shows through on the right and never behind the type. */}
-            <div className="relative z-10 bg-bg px-12 pt-28">
+                field shows through on the right and never behind the type.
+                Clipped only while stuck, where the row is one viewport and the
+                copy is known to fit inside it. */}
+            <div className="relative z-10 bg-bg px-12 pt-24 [@media(min-height:1020px)]:overflow-hidden">
               <SceneHead scene={p} />
               {p.body.map((t) => (
                 <p key={t} className="mt-4 text-[18px] leading-[1.58] text-[#a2958f]">{t}</p>
@@ -187,12 +224,16 @@ export default function Home() {
               {p.credit && <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.2em] text-[#6b5d60]">{p.credit}</p>}
             </div>
             <div data-entry-grid={p.entryGrid} aria-hidden="true">
-              {/* Where the portrait's characters land. MorphField reads this box
-                  every frame, so the plot sits in the column and the axis over
-                  it follows. Full-bleed: the whole screen beside the copy, edge
-                  to edge, with only enough padding inside for the labels. */}
-              {p.slug === "neuraluna" && <div id="chart-box" className="h-dvh w-full" />}
-              {p.slug === "reqtrace" && <div id="graph-box" className="h-dvh w-full" />}
+              {/* MorphField reads this box every frame, both to place the figure
+                  and to know how far its arrival has got.
+
+                  Short of a full viewport on purpose: the figure draws its axis
+                  labels and its hint against the bottom of this box, and at the
+                  exact viewport height they end a few pixels off the screen
+                  edge, where any browser furniture covers them. */}
+              {p.slug === "neuraluna" && <div id="chart-box" className="h-[calc(100dvh-34px)] w-full" />}
+              {p.slug === "reqtrace" && <div id="graph-box" className="h-[calc(100dvh-34px)] w-full" />}
+            </div>
             </div>
           </section>
           ),

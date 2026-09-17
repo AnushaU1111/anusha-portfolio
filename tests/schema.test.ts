@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { projects } from "@/content/projects";
 import { links } from "@/content/links";
+import { about } from "@/content/about";
 import { profile } from "@/content/profile";
 
 describe("content model", () => {
@@ -37,5 +38,35 @@ describe("content model", () => {
     // worst, so only the one local file carries it.
     const others = links.filter((l) => l.label !== "Résumé");
     expect(others.map((l) => l.download)).toEqual(others.map(() => undefined));
+  });
+
+  it("runs the timeline newest first", () => {
+    // The formats differ on purpose ("Expected Dec 2026", "Feb 2026 – now"),
+    // so order is checked on the last year each row names rather than by
+    // parsing a date out of prose.
+    const endYear = (when: string) => {
+      const years = when.match(/\d{4}/g);
+      const last = years?.[years.length - 1];
+      expect(last, `no year in ${when}`).toBeDefined();
+      return Number(last);
+    };
+    const years = about.timeline.map((m) => endYear(m.when));
+    for (let i = 1; i < years.length; i++) {
+      expect(years[i - 1] ?? 0, `row ${i} is out of order`).toBeGreaterThanOrEqual(years[i] ?? 0);
+    }
+  });
+
+  it("carries all three kinds of milestone, with no row repeated", () => {
+    expect(new Set(about.timeline.map((m) => m.kind))).toEqual(new Set(["study", "work", "project"]));
+    const rows = about.timeline.map((m) => `${m.when}|${m.what}|${m.where}`);
+    expect(new Set(rows).size).toBe(rows.length);
+  });
+
+  it("describes Temple as the single semester the timeline gives it", () => {
+    // The copy used to say "a year of research at Temple"; the résumé has
+    // January to May 2025. The two have to agree.
+    const temple = about.timeline.find((m) => m.where.includes("Temple"));
+    expect(temple?.when).toBe("Jan – May 2025");
+    expect(about.body.join(" ")).not.toContain("a year of research");
   });
 });

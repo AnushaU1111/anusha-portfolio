@@ -234,6 +234,20 @@ export const Scene = z.object({
 });
 export type Scene = z.infer<typeof Scene>;
 
+/**
+ * One row of the About timeline. `when` is copied from the résumé verbatim
+ * rather than normalised into dates: "Expected Dec 2026" and "Feb 2026 – now"
+ * say something a date range cannot, and inventing a start date for a degree
+ * the résumé gives only an end date for would be making it up.
+ */
+export const Milestone = z.object({
+  when: z.string().min(1),
+  what: z.string().min(1),
+  where: z.string().min(1),
+  kind: z.enum(["study", "work", "project"]),
+});
+export type Milestone = z.infer<typeof Milestone>;
+
 export const Link = z.object({
   label: z.string().min(1),
   href: z.string().min(1),
@@ -257,8 +271,5 @@ export const Profile = z.object({
   location: z.string().min(1),
   available: z.string().min(1),
   status: z.array(z.string().min(1)),
-  now: z.string().min(1),
-  recently: z.string().min(1),
-  focus: z.string().min(1),
 });
 export type Profile = z.infer<typeof Profile>;

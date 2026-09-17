@@ -31,6 +31,12 @@ export interface GraphNode {
   kind: NodeKind;
   /** The id in its type's brackets. The bracket is the type; nothing else is. */
   label: string;
+  /**
+   * What the node is, in words. Not drawn on the canvas — at this cell size a
+   * nineteen-node layout has room for an id and nothing more — but it is what
+   * the selection card leads with, and what makes a relation list readable.
+   */
+  title: string;
   /** Centre, px from the box's top-left. */
   x: number;
   y: number;
@@ -105,6 +111,7 @@ export const buildAsciiGraph = (_spec: GraphSpec, o: GraphOptions): AsciiGraph =
       id: n.id,
       kind,
       label: `${open}${n.id}${close}`,
+      title: n.title,
       x: left + (n.col / REF_COLS) * spanX,
       y: top + (n.row / REF_ROWS) * spanY,
     };

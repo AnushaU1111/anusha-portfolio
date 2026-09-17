@@ -184,3 +184,64 @@ describe("stampPairs dimming", () => {
     expect(dimmed).toBeGreaterThan(none * 1.1);
   });
 });
+
+describe("graph instance data", () => {
+  it("titles every node, distinctly", () => {
+    for (const n of NODES) {
+      expect(n.title.length, `${n.id} has no title`).toBeGreaterThan(2);
+      // A title that is just the id back again would tell a reader nothing.
+      expect(n.title).not.toContain(n.id);
+    }
+    expect(new Set(NODES.map((n) => n.title)).size).toBe(NODES.length);
+  });
+
+  it("carries the title onto the rendered node", () => {
+    for (const n of graph.nodes) {
+      expect(n.title).toBe(NODES.find((r) => r.id === n.id)?.title);
+    }
+  });
+
+  it("only joins node types in the directions the system produces", () => {
+    for (const [from, to, kind] of EDGES) {
+      const a = from[0];
+      const b = to[0];
+      if (kind === "owns") {
+        // Stakeholders own requirements. Nothing else owns anything.
+        expect(`${a}->${b}`, `owns ${from}->${to}`).toBe("S->R");
+      } else if (kind === "validates") {
+        // Tests validate features, or a requirement directly.
+        expect(a, `validates ${from}->${to}`).toBe("T");
+        expect(["F", "R"]).toContain(b);
+      } else {
+        // A requirement rests on requirements; a feature satisfies them.
+        expect(["R", "F"]).toContain(a);
+        expect(b, `depends ${from}->${to}`).toBe("R");
+      }
+    }
+  });
+
+  it("leaves no node stranded", () => {
+    const joined = new Set(EDGES.flatMap(([from, to]) => [from, to]));
+    for (const n of NODES) expect(joined.has(n.id), `${n.id} has no edges`).toBe(true);
+  });
+
+  it("has no cycle among requirement dependencies", () => {
+    // A requirement graph you can walk has to bottom out, or "depends on"
+    // means nothing. Kahn's algorithm: a cycle leaves nodes unremovable.
+    const deps = EDGES.filter(([f, t, k]) => k === "depends" && f.startsWith("R") && t.startsWith("R"));
+    const ids = NODES.filter((n) => n.id.startsWith("R")).map((n) => n.id);
+    const out = new Map(ids.map((id) => [id, deps.filter(([f]) => f === id).map(([, t]) => t)]));
+    const seen = new Set<string>();
+    const stack = new Set<string>();
+    const walk = (id: string): boolean => {
+      if (stack.has(id)) return false;
+      if (seen.has(id)) return true;
+      seen.add(id);
+      stack.add(id);
+      for (const next of out.get(id) ?? []) if (!walk(next)) return false;
+      stack.delete(id);
+      return true;
+    };
+    for (const id of ids) expect(walk(id), `cycle through ${id}`).toBe(true);
+  });
+});

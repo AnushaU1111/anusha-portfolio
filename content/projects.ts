@@ -26,7 +26,11 @@ const raw = [
       { value: "6", label: "fixes shipped" },
     ],
     stack: ["Python", "Pandas", "A/B testing", "Pareto analysis"],
-    pinned: true,
+    // Not pinned. The chart is drawn on MorphField, which reads this section's
+    // box position every frame to know how far the arrival has got. A pin holds
+    // the box still, so the distance it reads stops changing and the figure
+    // stalls part-built while the page keeps scrolling.
+    pinned: false,
     entryGrid: "pareto",
     figure: {
       kind: "pareto",
@@ -116,9 +120,11 @@ const raw = [
     ],
     stack: ["FastAPI", "Whisper", "spaCy", "FAISS", "Neo4j", "React Flow"],
     credit: "Team of five · MIT licensed · archived with a DOI",
-    // Holds for part of a viewport so the graph can be explored rather than
-    // scrolled past.
-    pinned: true,
+    // Not pinned, for the same reason as Neuraluna: the graph is a MorphField
+    // stage cued off this section's box, and pinning freezes that cue. The
+    // section is a full viewport tall on its own, so the graph is still on
+    // screen long enough to point at without the scroll being taken over.
+    pinned: false,
     entryGrid: "graph",
     figure: {
       kind: "graph",
@@ -171,7 +177,7 @@ const raw = [
         },
         {
           node: "R-07",
-          quote: "Two people disagreeing is a fact about the requirement. Keep both.",
+          quote: "If we cannot point at the sentence it came from, it is not a requirement. It is somebody's memory.",
           at: "00:38:55",
           speaker: "speaker 3",
           session: "session 05",

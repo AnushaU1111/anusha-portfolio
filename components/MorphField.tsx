@@ -1200,8 +1200,15 @@ function Card({
  * an id. The bracket is the node type, so type survives even when a node is
  * dimmed down to almost nothing.
  */
-const GRAPH_CARD_W = 356;
-const GRAPH_CARD_H = 224;
+const GRAPH_CARD_W = 420;
+const GRAPH_CARD_H = 300;
+/** How each node type is named in the card's header. */
+const KIND_NAME: Record<NodeKind, string> = {
+  S: "stakeholder",
+  R: "requirement",
+  F: "feature",
+  T: "test",
+};
 
 const NODE_TONE: Record<NodeKind, string> = {
   S: "text-[#a09490]",
@@ -1268,14 +1275,25 @@ function GraphChrome({
   );
 }
 
-/** One relation line: what it is, and the ids at the other end. */
-function Relation({ label, ids }: { label: string; ids: string[] }) {
+/**
+ * One relation, and what is at the other end of it. The label is the id, which
+ * is what the canvas draws and so what the eye can find; the title beside it is
+ * what makes the row mean something without hunting for that id on screen.
+ */
+function Relation({ label, ids, titles }: { label: string; ids: string[]; titles: Map<string, string> }) {
   if (ids.length === 0) return null;
   return (
-    <span className="whitespace-nowrap">
-      <span className="text-[#8b8083]">{label} </span>
-      <span className="text-[#cfc4be]">{ids.join(", ")}</span>
-    </span>
+    <div className="flex gap-2.5">
+      <span className="w-[76px] shrink-0 text-right text-[11px] uppercase tracking-[0.12em] text-[#8b8083]">{label}</span>
+      <span className="min-w-0 flex-1">
+        {ids.map((id) => (
+          <span key={id} className="block leading-[1.5]">
+            <span className="text-rose">{id}</span>{" "}
+            <span className="text-[#bfb4ae]">{titles.get(id) ?? ""}</span>
+          </span>
+        ))}
+      </span>
+    </div>
   );
 }
 
@@ -1304,29 +1322,38 @@ function GraphCard({
     4,
     Math.max(4, graph.height - GRAPH_CARD_H - 4),
   );
+  // Every relation list is a list of labels, so the card needs one lookup from
+  // label back to title rather than a search per row.
+  const titles = new Map(graph.nodes.map((n) => [n.label, n.title]));
   return (
     <div className="absolute border border-line bg-[#0b0708]/95 px-6 py-5" style={{ left, top, width: GRAPH_CARD_W }}>
       <div className="text-[12.5px] uppercase tracking-[0.2em]">
         <span className="text-rose">{node.label}</span>
         <span className="text-[#6b5d60]"> &middot; </span>
-        <span className="text-[#8b8083]">{line ? "extracted from transcript" : "no transcript line in this instance"}</span>
+        <span className="text-[#8b8083]">{KIND_NAME[node.kind]}</span>
       </div>
+      {/* What the node is. The id is the handle, this is the content. */}
+      <p className="mt-3 font-serif text-[21px] leading-[1.28] text-[#ede4de]">{node.title}</p>
       {line && (
         <>
-          <p className="mt-4 font-serif text-[20.5px] italic leading-[1.45] text-[#ded5ce]">&ldquo;{line.quote}&rdquo;</p>
-          <div className="mt-4 border-t border-line pt-3 text-[12px] tracking-[0.12em] text-[#a09490]">
+          {/* Provenance: the sentence the node was extracted from, which is the
+              whole argument of the project. */}
+          <p className="mt-4 border-l border-rose pl-4 font-serif text-[17.5px] italic leading-[1.45] text-[#bfb4ae]">
+            &ldquo;{line.quote}&rdquo;
+          </p>
+          <div className="mt-3 text-[11.5px] tracking-[0.12em] text-[#a09490]">
             {line.at} <span className="text-[#6b5d60]">&middot;</span> {line.speaker}{" "}
             <span className="text-[#6b5d60]">&middot;</span> {line.session}
           </div>
         </>
       )}
-      <div className={`flex flex-wrap gap-x-6 gap-y-1.5 text-[12.5px] tracking-[0.06em] ${line ? "mt-2" : "mt-4 border-t border-line pt-3"}`}>
-        <Relation label="owned by" ids={near.ownedBy} />
-        <Relation label="owns" ids={near.owns} />
-        <Relation label="validated by" ids={near.validatedBy} />
-        <Relation label="validates" ids={near.validates} />
-        <Relation label="depends on" ids={near.dependsOn} />
-        <Relation label="feeds" ids={near.feeds} />
+      <div className="mt-4 space-y-1.5 border-t border-line pt-3.5 text-[12.5px] tracking-[0.04em]">
+        <Relation label="owned by" ids={near.ownedBy} titles={titles} />
+        <Relation label="owns" ids={near.owns} titles={titles} />
+        <Relation label="depends on" ids={near.dependsOn} titles={titles} />
+        <Relation label="feeds" ids={near.feeds} titles={titles} />
+        <Relation label="validated by" ids={near.validatedBy} titles={titles} />
+        <Relation label="validates" ids={near.validates} titles={titles} />
       </div>
     </div>
   );

@@ -79,13 +79,6 @@ const ON_MORPH_FIELD = new Set([
   "skin-cancer",
 ]);
 
-/**
- * How long a pinned section holds, where a full viewport is too long. Neuraluna
- * is one: its chart has finished arriving by the moment the section pins, so
- * the default hold is a whole viewport of scrolling in which nothing happens.
- */
-const HOLD: Record<string, string> = { neuraluna: "+=35%", reqtrace: "+=55%" };
-
 const projectScene = (p: Scene): SceneSpec => {
   const spec: SceneSpec = {
     id: p.slug,
@@ -102,8 +95,6 @@ const projectScene = (p: Scene): SceneSpec => {
     // two scenes is the previous target coming apart into this one.
     entry: "previous",
   };
-  const hold = HOLD[p.slug];
-  if (p.pinned && hold !== undefined) spec.trigger = { start: "top top", end: hold };
   return spec;
 };
 

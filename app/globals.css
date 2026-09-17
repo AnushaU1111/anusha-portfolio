@@ -10,7 +10,21 @@
   --font-mono: var(--font-jetbrains), "JetBrains Mono", ui-monospace, monospace;
 }
 
-html { background: var(--color-bg); color: var(--color-ink); }
+/*
+ * Nothing on this page should ever scroll sideways, and one thing did: a
+ * `position: fixed; inset: 0` element is sized to the visual viewport, which
+ * on a platform with classic scrollbars is the vertical scrollbar's width
+ * wider than the content box. The two full-screen canvases therefore hung
+ * about 15px into the gutter and Chrome offered a horizontal scrollbar for
+ * them — which in turn ate the bottom 15px of the viewport and clipped the
+ * chart's own axis labels.
+ *
+ * `clip` rather than `hidden`: `hidden` would make the root a scroll
+ * container, which breaks the sticky figures further down the page. `clip`
+ * just refuses the overflow. Note this is invisible to scrollWidth, so it is
+ * not something a scrollWidth check will ever catch.
+ */
+html { background: var(--color-bg); color: var(--color-ink); overflow-x: clip; }
 body { font-family: var(--font-serif); font-weight: 300; -webkit-font-smoothing: antialiased; }
 em { font-style: italic; }
 

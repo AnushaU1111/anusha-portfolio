@@ -13,10 +13,18 @@ type NodeKind = "S" | "R" | "F" | "T";
 type EdgeKind = "owns" | "depends" | "validates";
 
 /**
- * One requirements session, as ReqTrace would return it. The instance is
- * illustrative and the scene says so; what is not illustrative is its shape,
- * four node types joined by three edge types, which is what the system
- * actually produces.
+ * One requirements session, as ReqTrace would return it: nineteen nodes and
+ * the twenty-four relations between them, each node titled as it was agreed.
+ *
+ * The instance is illustrative and the scene says so. What is not illustrative
+ * is its shape — four node types joined by three edge types — which is what
+ * the system actually produces, and the direction of the edges, which is what
+ * makes the graph worth walking: a requirement depends on the ones it rests
+ * on, a feature depends on the requirements it satisfies, a test validates
+ * what it covers, and a stakeholder owns what they asked for.
+ *
+ * The session described is ReqTrace being specified, which is the one meeting
+ * the team actually had a recording of.
  *
  * Positions are given on a 100 by 40 reference and scaled, so the layout
  * survives being regenerated at another column count.
@@ -24,26 +32,31 @@ type EdgeKind = "owns" | "depends" | "validates";
 const REF_COLS = 100;
 const REF_ROWS = 40;
 
-export const NODES: { id: string; col: number; row: number }[] = [
-  { id: "S-01", col: 14, row: 10 },
-  { id: "S-02", col: 18, row: 24 },
-  { id: "S-03", col: 28, row: 37 },
-  { id: "R-01", col: 32, row: 6 },
-  { id: "R-02", col: 30, row: 16 },
-  { id: "R-03", col: 38, row: 22 },
-  { id: "R-04", col: 40, row: 32 },
-  { id: "R-05", col: 54, row: 30 },
-  { id: "R-06", col: 14, row: 32 },
-  { id: "R-07", col: 56, row: 23 },
-  { id: "F-01", col: 50, row: 4 },
-  { id: "F-02", col: 48, row: 13 },
-  { id: "F-03", col: 62, row: 33 },
-  { id: "F-04", col: 70, row: 26 },
-  { id: "F-05", col: 76, row: 17 },
-  { id: "T-01", col: 68, row: 3 },
-  { id: "T-02", col: 66, row: 10 },
-  { id: "T-03", col: 86, row: 29 },
-  { id: "T-04", col: 92, row: 14 },
+export const NODES: { id: string; col: number; row: number; title: string }[] = [
+  // Stakeholders: who in the room the requirement belongs to.
+  { id: "S-01", col: 14, row: 10, title: "Product sponsor" },
+  { id: "S-02", col: 18, row: 24, title: "QA lead" },
+  { id: "S-03", col: 28, row: 37, title: "Research advisor" },
+  // Requirements, titled as they were agreed. Each one has a transcript line
+  // on the scene, and the two are written to say the same thing.
+  { id: "R-01", col: 32, row: 6, title: "Nothing publishes until the upload is signed off" },
+  { id: "R-02", col: 30, row: 16, title: "Each node names the stakeholder who asked for it" },
+  { id: "R-03", col: 38, row: 22, title: "A dropped upload keeps the sessions already indexed" },
+  { id: "R-04", col: 40, row: 32, title: "Every change links back to the meeting it came from" },
+  { id: "R-05", col: 54, row: 30, title: "Exports carry their provenance with them" },
+  { id: "R-06", col: 14, row: 32, title: "Extraction runs on the audio, never on the notes" },
+  { id: "R-07", col: 56, row: 23, title: "Every node keeps a pointer to its source sentence" },
+  // Features: what was built to satisfy them.
+  { id: "F-01", col: 50, row: 4, title: "Sign-off gate" },
+  { id: "F-02", col: 48, row: 13, title: "Node inspector" },
+  { id: "F-03", col: 62, row: 33, title: "Meeting backlink" },
+  { id: "F-04", col: 70, row: 26, title: "Graph export" },
+  { id: "F-05", col: 76, row: 17, title: "Transcript anchor" },
+  // Tests: what each one actually asserts.
+  { id: "T-01", col: 68, row: 3, title: "Rejects an unsigned upload" },
+  { id: "T-02", col: 66, row: 10, title: "Inspector renders on a partial index" },
+  { id: "T-03", col: 86, row: 29, title: "Export round-trips through Neo4j" },
+  { id: "T-04", col: 92, row: 14, title: "Anchor resolves to the right utterance" },
 ];
 
 export const EDGES: [string, string, EdgeKind][] = [
@@ -59,7 +72,7 @@ export const EDGES: [string, string, EdgeKind][] = [
   ["R-03", "R-05", "depends"],
   ["R-04", "R-07", "depends"],
   ["R-05", "R-07", "depends"],
-  ["R-06", "R-02", "depends"],
+  ["R-02", "R-06", "depends"],
   ["F-01", "R-01", "depends"],
   ["F-02", "R-02", "depends"],
   ["F-02", "R-03", "depends"],
