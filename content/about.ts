@@ -1,4 +1,4 @@
-import { Milestone } from "./schema";
+import { Milestone, StackGroup } from "./schema";
 
 /**
  * The About section's copy and timeline.
@@ -24,11 +24,30 @@ export const timeline: Milestone[] = [
   { when: "2022 – 2024", what: "Web Developer and UX Designer", where: "IET Vellore", kind: "work" },
 ].map((m) => Milestone.parse(m));
 
+/**
+ * The tools, grouped as the résumé groups them, with two additions: PyTorch,
+ * which the résumé names in its summary but leaves out of its own skills
+ * list, and Neo4j, which the résumé names in the ReqTrace bullets but not in
+ * its databases line. Both are stated on the résumé, just in the wrong place
+ * on it.
+ */
+export const stack: StackGroup[] = [
+  { label: "Languages", items: ["Python", "C++", "Java", "SQL", "R", "JavaScript", "C"] },
+  {
+    label: "Machine learning",
+    items: ["PyTorch", "TensorFlow", "scikit-learn", "NLP", "LLMs", "RAG", "Vector search", "FAISS", "Ollama"],
+  },
+  { label: "Data", items: ["Pandas", "NumPy", "Matplotlib", "Tableau", "Looker Studio"] },
+  { label: "Databases", items: ["MySQL", "MongoDB", "BigQuery", "Neo4j"] },
+  { label: "Web", items: ["React", "HTML", "CSS", "Streamlit", "Typescript"] },
+  { label: "Cloud and DevOps", items: ["Google Cloud Functions", "Kubernetes", "Vision AI", "Cloud Armor"] },
+].map((g) => StackGroup.parse(g));
+
 export const about = {
   index: "01",
   headline: ["I work where", "the data is messy."] as const,
   body: [
-    "I'm a US citizen and a master's student in computer science at NC State, concentrating in data science. Before that, a B.Tech at VIT Vellore and a semester of research at Temple.",
+    "I'm a master's student in computer science at NC State, concentrating in data science. Before that, a B.Tech at VIT Vellore and a semester of research at Temple.",
     "Most of what I build starts with a pile of data nobody has made sense of yet. A million social media posts. A thousand medical documents in more than one language. Chest-microphone recordings from ten people.",
   ],
   pull: "What I care about is what happens after the model runs. Does the number hold on a subject it has never heard? I treat evaluation as the work, not the paperwork at the end of it.",
@@ -37,10 +56,11 @@ export const about = {
    * about evaluation it read as filler; as a labelled row it is the ordinary
    * thing a portfolio says about the person and costs the reader nothing.
    */
-  interests: ["sketching", "reading", "boxing"],
+  interests: ["sketching", "reading", "boxing", "baking", "crochet", "pretty much down to try anything :)"],
   throughLine:
     "Thresholds chosen from what a mistake costs, per-class numbers read before the average, test sets built from subjects the model has never seen. Every figure here traces back to a report, a repository or a poster.",
   timeline,
+  stack,
 };
 
 export const contact = {

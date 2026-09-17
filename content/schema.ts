@@ -248,6 +248,17 @@ export const Milestone = z.object({
 });
 export type Milestone = z.infer<typeof Milestone>;
 
+/**
+ * One row of the stack list. Grouped rather than one long alphabetical run,
+ * because what a reader wants to know is whether the shape of the toolkit
+ * matches the job, and that is only legible by group.
+ */
+export const StackGroup = z.object({
+  label: z.string().min(1),
+  items: z.array(z.string().min(1)).min(1),
+});
+export type StackGroup = z.infer<typeof StackGroup>;
+
 export const Link = z.object({
   label: z.string().min(1),
   href: z.string().min(1),

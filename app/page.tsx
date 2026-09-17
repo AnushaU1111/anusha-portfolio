@@ -147,15 +147,52 @@ export default function Home() {
             </div>
             <div className="mt-9 grid gap-x-14 gap-y-7 2xl:grid-cols-2">
               <p className="max-w-[640px] border-l border-rose pl-6 text-[20px] leading-[1.6] text-[#ded5ce] 2xl:max-w-none">{about.pull}</p>
-              <div>
-                <p className="max-w-[640px] text-[15.5px] leading-[1.58] text-[#a09490] 2xl:max-w-none">{about.throughLine}</p>
-                {/* One restrained line rather than a sentence inside the
-                    argument above it, which is where this sat before and
-                    where it read as padding. */}
-                <p className="mt-7 font-mono text-[11.5px] uppercase tracking-[0.18em] text-[#928587]">
-                  Away from the screen <span className="text-[#5b4d50]">&middot;</span> {about.interests.join(", ")}
-                </p>
-              </div>
+              <p className="max-w-[640px] text-[20px] leading-[1.6] text-[#a09490] 2xl:max-w-none">{about.throughLine}</p>
+            </div>
+            {/* The facts, moved up from the contact scene, where they sat under
+                four links that already said how to get in touch. They belong
+                with the introduction: a reader deciding whether to keep
+                reading wants the location, the date and the work status, and
+                the interests row is the same kind of statement, so the four
+                are one block rather than a block and a stray line. Set at the
+                paragraph size above them rather than the old caption size. */}
+            <dl className="mt-12 grid gap-x-14 gap-y-8 border-t border-line pt-8 sm:grid-cols-2 2xl:grid-cols-4">
+              {[
+                ["Based in", profile.location],
+                ["Available", profile.available],
+                ["Status", profile.status.join(" \u00b7 ")],
+                ["Away from the screen", about.interests.join(", ")],
+              ].map(([k, v]) => (
+                <div key={k}>
+                  <dt className="font-mono text-[12.5px] uppercase leading-[1.5] tracking-[0.2em] text-[#8b8083]">{k}</dt>
+                  <dd className="mt-3 text-[20px] leading-[1.45] text-[#ded5ce]">{v}</dd>
+                </div>
+              ))}
+            </dl>
+            {/* The stack. Two columns of groups once there is room, which is
+                what closes the gap this column used to leave between the copy
+                and the timeline. Grouped, because the question a reader has is
+                whether the shape of the toolkit fits the job, and only the
+                grouping answers that. */}
+            <div className="mt-14 border-t border-line pt-7">
+              <div className="font-mono text-[11.5px] uppercase tracking-[0.2em] text-[#8b8083]">Stack</div>
+              <dl className="mt-6 grid gap-x-14 gap-y-5 2xl:grid-cols-2">
+                {about.stack.map((g) => (
+                  <div key={g.label} className="grid grid-cols-[136px_minmax(0,1fr)] gap-x-5">
+                    <dt className="pt-0.5 font-mono text-[11px] uppercase leading-[1.5] tracking-[0.14em] text-rose">
+                      {g.label}
+                    </dt>
+                    <dd className="font-mono text-[12.5px] leading-[1.75] text-[#bfb4ae]">
+                      {g.items.map((t, i) => (
+                        <span key={t}>
+                          {i > 0 && <span className="text-[#5b4d50]"> &middot; </span>}
+                          {t}
+                        </span>
+                      ))}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
             </div>
           </div>
         </div>
@@ -265,14 +302,6 @@ export default function Home() {
             </li>
           ))}
         </ul>
-        <dl className="mt-8 flex max-w-[620px] flex-wrap gap-x-14 gap-y-5">
-          {[["Based in", profile.location], ["Available", profile.available], ["Status", profile.status.join(" · ")]].map(([k, v]) => (
-            <div key={k}>
-              <dt className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#6b5d60]">{k}</dt>
-              <dd className="mt-2.5 text-[16.5px] leading-[1.5] text-[#c8bcb6]">{v}</dd>
-            </div>
-          ))}
-        </dl>
         <footer className="absolute inset-x-12 bottom-6 flex justify-between border-t border-line pt-3.5 font-mono text-[11px] uppercase tracking-[0.2em] text-[#57494c]">
           <span>&copy; 2026 {profile.name}</span>
           {/* A Link rather than a raw anchor, so the router adds both the

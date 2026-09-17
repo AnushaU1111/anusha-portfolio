@@ -69,4 +69,25 @@ describe("content model", () => {
     expect(temple?.when).toBe("Jan – May 2025");
     expect(about.body.join(" ")).not.toContain("a year of research");
   });
+
+  it("groups the stack without repeating a tool", () => {
+    expect(about.stack.length).toBeGreaterThan(3);
+    const all = about.stack.flatMap((g) => g.items);
+    // A tool listed under two headings reads as padding.
+    expect(new Set(all.map((t) => t.toLowerCase())).size).toBe(all.length);
+    expect(new Set(about.stack.map((g) => g.label)).size).toBe(about.stack.length);
+  });
+
+  it("keeps the stack and the project pages naming the same tools", () => {
+    // Anything a project page puts in its own stack chips should be findable
+    // in the stack list, or the two disagree about what she works with.
+    const listed = new Set(about.stack.flatMap((g) => g.items).map((t) => t.toLowerCase()));
+    const onProjects = new Set(projects.flatMap((p) => p.stack).map((t) => t.toLowerCase()));
+    const missing = [...onProjects].filter((t) => !listed.has(t));
+    // Project-specific libraries are allowed to be absent; the named core is not.
+    for (const core of ["python", "react", "neo4j", "faiss"]) {
+      expect(listed.has(core), `stack list is missing ${core}`).toBe(true);
+    }
+    expect(missing.length, `unlisted on the stack: ${missing.join(", ")}`).toBeLessThan(onProjects.size);
+  });
 });
