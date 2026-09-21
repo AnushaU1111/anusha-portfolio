@@ -103,7 +103,21 @@ export default function Home() {
         </h1>
         {/* Enough room that the descenders in "Upadhyay" clear this line: the
             name is set at 0.94 leading, so its box ends above its own tails. */}
-        <div className="mt-7 font-mono text-[13.5px] uppercase tracking-[0.3em] text-rose">ML engineer</div>
+        <div className="mt-7 flex flex-wrap items-baseline gap-x-3 gap-y-1 font-mono text-[13.5px] uppercase tracking-[0.3em] text-rose max-md:gap-x-2 max-md:text-[12px] max-md:tracking-[0.18em]">
+          {/* The separator trails its own title rather than leading the next
+              one, so when the line breaks on a phone the dot stays at the end
+              of the first line instead of opening the second. Each title and
+              its dot are one span, which is also what stops a break landing
+              inside a title. */}
+          {profile.titles.map((t, i) => (
+            <span key={t} className="flex items-baseline gap-x-3 max-md:gap-x-2">
+              <span>{t}</span>
+              {i < profile.titles.length - 1 && (
+                <span aria-hidden="true" className="text-[#7c6e71]">&middot;</span>
+              )}
+            </span>
+          ))}
+        </div>
         {/* Held back until the lily has assembled. See the lily-gated rule in
             globals.css: the flower's own progress drives it, so the statement
             arrives as the last characters land rather than on a timer that

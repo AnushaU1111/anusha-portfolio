@@ -90,4 +90,11 @@ describe("content model", () => {
     }
     expect(missing.length, `unlisted on the stack: ${missing.join(", ")}`).toBeLessThan(onProjects.size);
   });
+
+  it("names the roles the hero prints under her name", () => {
+    expect(profile.titles).toEqual(["AI/ML harness engineer", "Data scientist", "Researcher"]);
+    // Stored in sentence case; the hero uppercases them in CSS, so a stray
+    // all-caps entry here would be a content bug rather than a style choice.
+    for (const t of profile.titles) expect(t).not.toBe(t.toUpperCase());
+  });
 });

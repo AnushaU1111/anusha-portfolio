@@ -278,6 +278,12 @@ export type Link = z.infer<typeof Link>;
 
 export const Profile = z.object({
   name: z.string().min(1),
+  /**
+   * What she does, as the line under her name in the hero. A list rather than
+   * a string because the hero joins it with a separator and, on a narrow
+   * screen, has to be able to break between the roles rather than inside one.
+   */
+  titles: z.array(z.string().min(1)).min(1),
   role: z.string().min(1),
   location: z.string().min(1),
   available: z.string().min(1),
