@@ -2,6 +2,7 @@ import { confusionOf } from "@/lib/ascii/bars";
 import type { ContactSheetSpec } from "@/lib/ascii/figures/contactSheet";
 import type { Scene } from "@/content/schema";
 import { SceneHead } from "@/components/SceneHead";
+import { PhoneDrawer } from "@/components/PhoneDrawer";
 
 /**
  * The Screening scene, on one page: what each stage bought, what the threshold
@@ -52,12 +53,14 @@ export function ScreeningSection({ scene, figure }: { scene: Scene; figure: Cont
         <div className="relative z-10 bg-bg px-12 max-md:px-5">
           <SceneHead scene={scene} />
           <p className="mt-6 max-w-[640px] text-[18.5px] leading-[1.6] text-[#bfb4ae]">{scene.lede}</p>
-          {scene.body.map((t) => (
-            <p key={t} className="mt-4 max-w-[640px] text-[18px] leading-[1.58] text-[#a2958f]">{t}</p>
-          ))}
-          <p className="mt-6 max-w-[640px] border-l border-rose pl-5 text-[18px] leading-[1.58] text-[#ded5ce]">
-            {scene.pull}
-          </p>
+          <PhoneDrawer>
+            {scene.body.map((t) => (
+              <p key={t} className="mt-4 max-w-[640px] text-[18px] leading-[1.58] text-[#a2958f]">{t}</p>
+            ))}
+            <p className="mt-6 max-w-[640px] border-l border-rose pl-5 text-[18px] leading-[1.58] text-[#ded5ce]">
+              {scene.pull}
+            </p>
+          </PhoneDrawer>
           <dl className="mt-9 flex flex-wrap gap-x-9 gap-y-5 border-t border-line pt-6">
             {scene.metrics.map((k) => (
               <div key={k.label}>

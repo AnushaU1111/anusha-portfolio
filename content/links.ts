@@ -6,16 +6,16 @@ import { Link } from "./schema";
  * drawer read from here, so an address is edited in exactly one place.
  */
 export const links: Link[] = [
-  { label: "Email", href: "mailto:anushaupadhyay1111@gmail.com", reveal: "anushaupadhyay1111@gmail.com" },
-  { label: "GitHub", href: "https://github.com/AnushaU1111", reveal: "github.com/AnushaU1111" },
-  { label: "LinkedIn", href: "https://linkedin.com/in/upadhyay-anusha", reveal: "linkedin.com/in/upadhyay-anusha" },
+  { label: "Email", href: "mailto:anushaupadhyay1111@gmail.com", detail: "anushaupadhyay1111@gmail.com" },
+  { label: "GitHub", href: "https://github.com/AnushaU1111", detail: "github.com/AnushaU1111" },
+  { label: "LinkedIn", href: "https://linkedin.com/in/upadhyay-anusha", detail: "linkedin.com/in/upadhyay-anusha" },
   // Served straight out of public/, so the router never sees it and it has to
   // carry the subpath itself. `download` names the saved file: the raw path
   // would land in someone's downloads folder as the anonymous "resume.pdf".
   {
     label: "Résumé",
     href: asset("/resume.pdf"),
-    reveal: "PDF, 1 page",
+    detail: "PDF, 1 page",
     download: "Anusha-Upadhyay-Resume.pdf",
   },
 ].map((l) => Link.parse(l));

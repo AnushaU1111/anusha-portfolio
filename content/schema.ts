@@ -262,8 +262,12 @@ export type StackGroup = z.infer<typeof StackGroup>;
 export const Link = z.object({
   label: z.string().min(1),
   href: z.string().min(1),
-  /** Shown on hover; never printed at rest. */
-  reveal: z.string().min(1),
+  /**
+    * The address itself, or what the file is. Printed next to the label rather
+    * than revealed on hover: a recruiter should be able to read the email
+    * without moving a mouse, and on a touch screen there is no hover at all.
+    */
+  detail: z.string().min(1),
   /**
    * The filename a click should save the target as. Set only on a file served
    * out of public/: without it a browser navigates to the PDF and replaces the

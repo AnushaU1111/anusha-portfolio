@@ -145,3 +145,72 @@ describe("bars, stacked", () => {
     expect(stacked.rows.map((r) => [r.label, r.value])).toEqual(gutter.rows.map((r) => [r.label, r.value]));
   });
 });
+
+/**
+ * The phone drawers, checked against the source rather than a rendered page.
+ *
+ * The rule they exist to keep is a rule about content, not layout: on a phone
+ * the paragraphs fold away and the numbers do not. That is easy to break by
+ * moving one JSX block, and nothing about the page would look wrong on a
+ * laptop when it happened, so it is worth asserting where it can be asserted
+ * cheaply. Reading the files is crude; the alternative is a browser in CI.
+ */
+describe("phone drawers", () => {
+  const SECTIONS = [
+    "app/page.tsx",
+    "components/TempleSection.tsx",
+    "components/CorpusSection.tsx",
+    "components/AcousticSection.tsx",
+    "components/ScreeningSection.tsx",
+  ];
+
+  /** Everything between each <PhoneDrawer> and its close, in one file. */
+  const drawersIn = (src: string): string[] => {
+    const out: string[] = [];
+    let from = 0;
+    for (;;) {
+      const open = src.indexOf("<PhoneDrawer", from);
+      if (open === -1) return out;
+      const close = src.indexOf("</PhoneDrawer>", open);
+      expect(close, "unclosed PhoneDrawer").toBeGreaterThan(open);
+      out.push(src.slice(open, close));
+      from = close + 1;
+    }
+  };
+
+  const sources = async () => {
+    const { readFile } = await import("node:fs/promises");
+    const entries = await Promise.all(
+      SECTIONS.map(async (f) => [f, await readFile(new URL(`../${f}`, import.meta.url), "utf8")] as const),
+    );
+    return entries;
+  };
+
+  it("folds the prose of every project away", async () => {
+    for (const [file, src] of await sources()) {
+      const drawers = drawersIn(src);
+      expect(drawers.length, `${file} has no drawer`).toBeGreaterThan(0);
+      const holdsProse = drawers.some((d) => /\.body\.map/.test(d) && /\.pull/.test(d));
+      expect(holdsProse, `${file} does not fold its paragraphs`).toBe(true);
+    }
+  });
+
+  it("leaves every number on the screen", async () => {
+    for (const [file, src] of await sources()) {
+      for (const d of drawersIn(src)) {
+        // The metrics, the stack and the credit line are what a reader
+        // skimming six projects on a phone is actually deciding on.
+        expect(/\.metrics\.map/.test(d), `${file} folds its metrics away`).toBe(false);
+        expect(/\.stack\.map/.test(d), `${file} folds its stack away`).toBe(false);
+      }
+    }
+  });
+
+  it("opens one project to show what the rest do", async () => {
+    const page = (await sources()).find(([f]) => f === "app/page.tsx")?.[1] ?? "";
+    // The first project in scene order, so the pattern is demonstrated at the
+    // top of the work rather than somewhere in the middle of it.
+    expect(page).toMatch(/start=\{p\.index === "02" \? "open" : "closed"\}/);
+    expect(projects[0]?.index).toBe("02");
+  });
+});

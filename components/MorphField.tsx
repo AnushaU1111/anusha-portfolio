@@ -33,6 +33,12 @@ const CELL_H = CELL_W / CELL_ASPECT;
 /** Characters across each figure. */
 const FLOWER_COLS = 520;
 const FACE_COLS = 440;
+/**
+ * The margin left either side of a photographic figure on a narrow screen.
+ * Small: the point of the phone form is that the whole figure is on the
+ * screen, not that it is politely inset.
+ */
+const NARROW_GUTTER = 24;
 /** The share of the hero's scroll spent assembling the flower. */
 const FLY_COMPLETE = 0.82;
 /**
@@ -62,6 +68,22 @@ const GRAPH_DIM = 0.2;
  */
 const NARROW_AT_PX = 768;
 const isNarrow = () => window.innerWidth < NARROW_AT_PX;
+/**
+ * How many characters wide to sample a photograph. The full count is a figure
+ * wider than a phone: the portrait at 440 cells is 660px of characters in a
+ * 390px window, so two thirds of her face was off the screen either side and
+ * what was left read as a crop rather than a portrait. On a narrow screen the
+ * count is whatever fits the window instead, which also cuts the cells the
+ * frame has to stamp to about a third of what it was.
+ *
+ * Sampled once, at build, because the flower and the face are paired cell for
+ * cell and the pairing is what the whole opening is. A phone turned on its
+ * side after that keeps the count it was built with: the figure is then
+ * smaller than it could be, which is a good deal less wrong than a face with
+ * no edges.
+ */
+const colsFor = (full: number): number =>
+  isNarrow() ? Math.min(full, Math.floor((window.innerWidth - NARROW_GUTTER) / CELL_W)) : full;
 
 interface Props {
   flowerSrc: string;
@@ -763,8 +785,8 @@ export function MorphField({
       await document.fonts.load('10px "JetBrains Mono"').catch(() => undefined);
       if (!alive()) return;
       const [flower, face] = await Promise.all([
-        sample(flowerSrc, FLOWER_COLS, true),
-        sample(faceSrc, FACE_COLS, false),
+        sample(flowerSrc, colsFor(FLOWER_COLS), true),
+        sample(faceSrc, colsFor(FACE_COLS), false),
       ]);
       if (!alive()) return;
       built = {
@@ -947,8 +969,12 @@ export function MorphField({
             {/* The mel axis. Brightness is energy in the bin here, which is the
                 one place on this site where it carries the data, so the axis
                 has to say which way the frequency runs. */}
+            {/* Sits just outside the box on a laptop, where the copy column is
+                next to it and there is room. A phone box runs the full width,
+                so outside the box is outside the window: below md the label
+                turns the right way up and goes above the figure instead. */}
             <span
-              className="absolute whitespace-nowrap text-[12px] uppercase tracking-[0.22em] text-[#8b8083]"
+              className="absolute whitespace-nowrap text-[12px] uppercase tracking-[0.22em] text-[#8b8083] max-md:hidden"
               style={{
                 left: -8,
                 top: "50%",
@@ -956,6 +982,9 @@ export function MorphField({
                 transformOrigin: "left top",
               }}
             >
+              Mel frequency &uarr;
+            </span>
+            <span className="absolute left-0 top-[-18px] hidden whitespace-nowrap text-[12px] uppercase tracking-[0.2em] text-[#8b8083] max-md:block">
               Mel frequency &uarr;
             </span>
             <span className="absolute bottom-[-18px] left-0 whitespace-nowrap text-[12px] uppercase tracking-[0.2em] text-[#8b8083]">

@@ -12,6 +12,8 @@ import { CorpusSection } from "@/components/CorpusSection";
 import { TempleSection } from "@/components/TempleSection";
 import { SceneHead } from "@/components/SceneHead";
 import { Timeline } from "@/components/Timeline";
+import { PhoneDrawer } from "@/components/PhoneDrawer";
+import { PhoneCollapse } from "@/components/PhoneCollapse";
 
 /**
  * Phase 01 scaffold. Sections render their content from the model so the
@@ -73,6 +75,7 @@ export default function Home() {
 
   return (
     <main className="relative">
+      <PhoneCollapse />
       <Field />
       {/* The cold open, the portrait and the chart share one fine-grid canvas,
           because each becoming the next has to be the same characters moving. */}
@@ -255,10 +258,15 @@ export default function Home() {
                 copy is known to fit inside it. */}
             <div className="relative z-10 bg-bg px-12 max-md:px-5 pt-24 max-md:pt-16 max-md:overflow-visible [@media(min-height:1020px)]:overflow-hidden">
               <SceneHead scene={p} />
-              {p.body.map((t) => (
-                <p key={t} className="mt-4 text-[18px] leading-[1.58] text-[#a2958f]">{t}</p>
-              ))}
-              <p className="mt-6 border-l border-rose pl-5 text-[18px] leading-[1.58] text-[#ded5ce]">{p.pull}</p>
+              {/* The paragraphs fold away on a phone; the numbers underneath
+                  them do not. The first project opens with its prose showing,
+                  so the pattern is demonstrated rather than merely offered. */}
+              <PhoneDrawer start={p.index === "02" ? "open" : "closed"}>
+                {p.body.map((t) => (
+                  <p key={t} className="mt-4 text-[18px] leading-[1.58] text-[#a2958f]">{t}</p>
+                ))}
+                <p className="mt-6 border-l border-rose pl-5 text-[18px] leading-[1.58] text-[#ded5ce]">{p.pull}</p>
+              </PhoneDrawer>
               <dl className="mt-10 flex flex-wrap gap-x-9 gap-y-5 border-t border-line pt-6">
                 {p.metrics.map((m) => (
                   <div key={m.label}>
@@ -291,13 +299,19 @@ export default function Home() {
         )}
       </div>
 
-      <section id="contact" className="relative z-10 min-h-dvh px-12 max-md:px-5 pb-28 pt-32">
+      {/* The bottom padding on a phone is the flower's own room. It sits at the
+          bottom of this section rather than beside the copy, so without it the
+          last link rows sit on top of it and the addresses are unreadable. */}
+      <section id="contact" className="relative z-10 min-h-dvh px-12 max-md:px-5 pb-28 pt-32 max-md:pb-[56svh] max-md:pt-20">
         {/* Where the lily comes back. The bars on the last project page travel
             into it, so the site closes on the figure it opened with, at the
             same cell size and from the same grid. */}
         <div id="flower-box" className="absolute inset-y-0 right-0 w-[58%] max-md:inset-x-0 max-md:top-auto max-md:h-[52svh] max-md:w-full" aria-hidden="true" />
         <div className="font-mono text-[12.5px] uppercase tracking-[0.26em] text-rose">Contact</div>
-        <h2 className="mt-6 max-w-[900px] font-serif text-[clamp(40px,4.4vw,68px)] leading-[1.04]">
+        {/* Small enough on a phone that each of the two written segments still
+            fits its own line. At the clamp floor the first one wrapped, which
+            turned a line break placed by hand into a three-line rag. */}
+        <h2 className="mt-6 max-w-[900px] font-serif text-[clamp(40px,4.4vw,68px)] leading-[1.04] max-md:text-[33px]">
           {contact.headline[0]}
           <br />
           {contact.headline[1]}
@@ -310,13 +324,17 @@ export default function Home() {
                   React omits the attribute entirely when it is. */}
               <a href={l.href} download={l.download} className="group flex items-baseline gap-4 py-4 no-underline max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-1.5">
                 <span className="font-serif text-[36px] font-light text-[#cfc4be] group-hover:text-[#f4ece6] max-md:text-[30px]">{l.label}</span>
-                <span className="flex-1 font-mono text-[11.5px] tracking-[0.16em] text-transparent group-hover:text-[#a09490] max-md:order-3 max-md:w-full max-md:flex-none max-md:tracking-[0.08em] max-md:text-[#928587]">{l.reveal}</span>
+                <span className="flex-1 font-mono text-[11.5px] tracking-[0.16em] text-[#928587] group-hover:text-[#ded5ce] max-md:order-3 max-md:w-full max-md:flex-none max-md:tracking-[0.08em]">{l.detail}</span>
                 <span className="font-mono text-[15px] text-[#6b5d60] group-hover:text-rose max-md:ml-auto">&rarr;</span>
               </a>
             </li>
           ))}
         </ul>
-        <footer className="absolute inset-x-12 bottom-6 flex justify-between border-t border-line pt-3.5 font-mono text-[11px] uppercase tracking-[0.2em] text-[#57494c]">
+        {/* Three columns across the foot of the page on a laptop. On a phone
+            there is no room for three, so it stops being absolute — which is
+            what had it sitting on top of the last link — and becomes three
+            stacked lines after the links instead. */}
+        <footer className="absolute inset-x-12 bottom-6 flex justify-between border-t border-line pt-3.5 font-mono text-[11px] uppercase tracking-[0.2em] text-[#57494c] max-md:static max-md:mt-12 max-md:flex-col max-md:gap-2.5 max-md:tracking-[0.12em]">
           <span>&copy; 2026 {profile.name}</span>
           {/* A Link rather than a raw anchor, so the router adds both the
               subpath the site is served from and the trailing slash. */}

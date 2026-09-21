@@ -2,6 +2,7 @@ import type { SpectrogramSpec } from "@/lib/ascii/figures/spectrogram";
 import { reportOf, timelineOf } from "@/lib/ascii/wave";
 import type { Scene } from "@/content/schema";
 import { SceneHead } from "@/components/SceneHead";
+import { PhoneDrawer } from "@/components/PhoneDrawer";
 
 /**
  * The Acoustic scene, on one page: the window the model sees, and the report on
@@ -56,12 +57,14 @@ export function AcousticSection({ scene, figure }: { scene: Scene; figure: Spect
         <div className="relative z-10 bg-bg px-12 max-md:px-5">
           <SceneHead scene={scene} />
           <p className="mt-6 max-w-[640px] text-[18.5px] leading-[1.6] text-[#bfb4ae]">{scene.lede}</p>
-          {scene.body.map((t) => (
-            <p key={t} className="mt-4 max-w-[640px] text-[18px] leading-[1.58] text-[#a2958f]">{t}</p>
-          ))}
-          <p className="mt-6 max-w-[640px] border-l border-rose pl-5 text-[18px] leading-[1.58] text-[#ded5ce]">
-            {scene.pull}
-          </p>
+          <PhoneDrawer>
+            {scene.body.map((t) => (
+              <p key={t} className="mt-4 max-w-[640px] text-[18px] leading-[1.58] text-[#a2958f]">{t}</p>
+            ))}
+            <p className="mt-6 max-w-[640px] border-l border-rose pl-5 text-[18px] leading-[1.58] text-[#ded5ce]">
+              {scene.pull}
+            </p>
+          </PhoneDrawer>
           <dl className="mt-9 flex flex-wrap gap-x-9 gap-y-5 border-t border-line pt-6">
             {scene.metrics.map((m) => (
               <div key={m.label}>
